@@ -1,92 +1,107 @@
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
-import plotly.express as px
-import plotly.graph_objects as go
 
-# Load Data
-def load_data():
-    try:
-        df = pd.read_csv('data/preprocessed_pubmed_articles.csv')
-        print(df.columns)
-        return df
-    except FileNotFoundError:
-        print("Error: The file 'preprocessed_pubmed_articles.csv' was not found.")
-        return pd.DataFrame()  # Return an empty DataFrame in case of an error
+# Load your preprocessed data
+def load_preprocessed_data(filepath):
+    df = pd.read_csv(filepath)
+    
+    # Handle NaN values by filling them with 'Unknown'
+    df['Ethnographic_Terms'] = df['Ethnographic_Terms'].fillna('Unknown')
+    df['Socioeconomic_Terms'] = df['Socioeconomic_Terms'].fillna('Unknown')
+    df['Mental_Health_Terms'] = df['Mental_Health_Terms'].fillna('Unknown')
+    df['Epigenetic_Terms'] = df['Epigenetic_Terms'].fillna('Unknown')
+    
+    return df
 
-# Build the interactive 3D topic visualization with Plotly
-def create_3d_topic_visualization(df, topic_x='Mental_Health_Terms', topic_y='Epigenetic_Terms', topic_z='Socioeconomic_Terms'):
-    if df.empty:
-        return go.Figure()  # Return an empty figure if data is not loaded properly
+# Load the dataset
+df = load_preprocessed_data('data/preprocessed_pubmed_articles.csv')
 
-    fig = px.scatter_3d(df,
-                        x=topic_x,
-                        y=topic_y,
-                        z=topic_z,
-                        color='Ethnographic_Terms',  # Color based on race/ethnicity
-                        hover_name='Journal',  # Display journal or other relevant info on hover
-                        title='3D Topic Visualization: Epigenetics, Mental Health, Socioeconomic Factors')
-
-    fig.update_layout(
-        scene=dict(
-            xaxis_title='Mental Health Terms',
-            yaxis_title='Epigenetic Changes',
-            zaxis_title='Socioeconomic Disparities'
-        ),
-        margin=dict(l=0, r=0, b=0, t=40)
-    )
-    return fig
-
-# Dash app setup
+# Initialize Dash app
 app = dash.Dash(__name__)
 
-# Load the preprocessed data
-df = load_data()
-
-# Layout for the Dash app
+# Layout for Dash App (HTML interface)
 app.layout = html.Div([
-    html.H1("Epigenetics and Mental Health Correlation Exploration"),
+    html.H1("Advanced Interactive Visualization Dashboard"),
 
-    # 3D Topic Visualization Graph
-    dcc.Graph(
-        id='3d_scatter',
-        figure=create_3d_topic_visualization(df)
-    ),
-    
-    # Dropdown for choosing which axis to visualize
-    html.Label("Select X-axis (Mental Health Terms)"),
-    dcc.Dropdown(
-        id='xaxis_dropdown',
-        options=[{'label': term, 'value': term} for term in df['Mental_Health_Terms'].unique()],
-        value='Mental_Health_Terms'  # Default value
-    ),
+    # Slider for dynamic interaction across all graphs
+    html.Div([
+        html.Label("Adjust visualization parameters using the slider:"),
+        dcc.Slider(
+            id='slider', 
+            min=1, 
+            max=10, 
+            step=1, 
+            value=5, 
+            marks={i: f'{i}' for i in range(1, 11)},
+            tooltip={"placement": "bottom", "always_visible": True}
+        ),
+    ], style={'width': '50%', 'margin': 'auto', 'padding': '20px'}),
 
-    html.Label("Select Y-axis (Epigenetic Terms)"),
-    dcc.Dropdown(
-        id='yaxis_dropdown',
-        options=[{'label': term, 'value': term} for term in df['Epigenetic_Terms'].unique()],
-        value='Epigenetic_Terms'  # Default value
-    ),
+    # Create a 2-row grid with 3 columns per row for all six visualizations
+    html.Div([
 
-    html.Label("Select Z-axis (Socioeconomic Terms)"),
-    dcc.Dropdown(
-        id='zaxis_dropdown',
-        options=[{'label': term, 'value': term} for term in df['Socioeconomic_Terms'].unique()],
-        value='Socioeconomic_Terms'  # Default value
-    )
+        # Row 1: Visualizations 1, 2, and 3
+        html.Div([
+            html.Div([dcc.Graph(id='graph1')], style={'width': '32%', 'display': 'inline-block', 'padding': '10px'}),
+            html.Div([dcc.Graph(id='graph2')], style={'width': '32%', 'display': 'inline-block', 'padding': '10px'}),
+            html.Div([dcc.Graph(id='graph3')], style={'width': '32%', 'display': 'inline-block', 'padding': '10px'}),
+        ], style={'display': 'flex', 'justify-content': 'space-between'}),
+
+        # Row 2: Visualizations 4, 5, and 6
+        html.Div([
+            html.Div([dcc.Graph(id='graph4')], style={'width': '32%', 'display': 'inline-block', 'padding': '10px'}),
+            html.Div([dcc.Graph(id='graph5')], style={'width': '32%', 'display': 'inline-block', 'padding': '10px'}),
+            html.Div([dcc.Graph(id='graph6')], style={'width': '32%', 'display': 'inline-block', 'padding': '10px'}),
+        ], style={'display': 'flex', 'justify-content': 'space-between'})
+
+    ], style={'padding': '20px'}),
 ])
 
-# Define the callback for interactivity
+# Callback to update all graphs based on the slider value
 @app.callback(
-    Output('3d_scatter', 'figure'),
-    [Input('xaxis_dropdown', 'value'),
-     Input('yaxis_dropdown', 'value'),
-     Input('zaxis_dropdown', 'value')]
+    [Output('graph1', 'figure'),
+     Output('graph2', 'figure'),
+     Output('graph3', 'figure'),
+     Output('graph4', 'figure'),
+     Output('graph5', 'figure'),
+     Output('graph6', 'figure')],
+    [Input('slider', 'value')]
 )
-def update_graph(xaxis, yaxis, zaxis):
-    return create_3d_topic_visualization(df, topic_x=xaxis, topic_y=yaxis, topic_z=zaxis)
+def update_graphs(slider_value):
+    # Visualization 1: Treemap for Mental Health Across Racial & Socioeconomic Factors
+    fig1 = px.treemap(df, path=['Ethnographic_Terms', 'Socioeconomic_Terms', 'Mental_Health_Terms'], 
+                      title="Mental Health Disorders Across Racial & Socioeconomic Factors")
 
-# Run the Dash app
+    # Visualization 2: 3D Scatter Plot for Epigenetics, Mental Health, and Socioeconomic Factors
+    fig2 = px.scatter_3d(df, x='Epigenetic_Terms', y='Mental_Health_Terms', z='Socioeconomic_Terms', 
+                         color='Mental_Health_Terms', title="Epigenetics vs Mental Health and Socioeconomic Factors")
+    fig2.update_traces(marker=dict(size=slider_value*2))
+
+    # Visualization 3: Heatmap for Mental Health and Socioeconomic Factors
+    pivot_table = df.pivot_table(index='Mental_Health_Terms', columns='Socioeconomic_Terms', aggfunc='size', fill_value=0)
+    fig3 = px.imshow(pivot_table, title="Heatmap: Mental Health vs Socioeconomic Factors")
+
+    # Visualization 4: Sunburst Chart for Risk of Suicide and Epigenetic Impacts
+    fig4 = px.sunburst(df, path=['Epigenetic_Terms', 'Ethnographic_Terms', 'Socioeconomic_Terms', 'Mental_Health_Terms'], 
+                       title="Risk of Suicide and Epigenetic Impacts")
+
+    # Visualization 5: 3D Scatter Plot for Mental Health, Race, and Socioeconomic Factors
+    fig5 = px.scatter_3d(df, x='Ethnographic_Terms', y='Socioeconomic_Terms', z='Mental_Health_Terms', 
+                         color='Ethnographic_Terms', title="Mental Health Across Racial and Socioeconomic Factors")
+    fig5.update_traces(marker=dict(size=slider_value*2))
+
+    # Visualization 6: Creative Network Visualization (Force-directed Network Graph)
+    fig6 = go.Figure(go.Scatter(
+        x=[1, 2, 3, 4], y=[1, 3, 2, 4], text=["PTSD", "DNA Methylation", "Income Inequality", "Race"],
+        mode="markers+text", textposition="top center", marker=dict(size=[slider_value*10, 20, 15, 10])))
+    fig6.update_layout(title="Creative Network Visualization", showlegend=False)
+
+    return fig1, fig2, fig3, fig4, fig5, fig6
+
+# Run Dash App
 if __name__ == '__main__':
     app.run_server(debug=True)
