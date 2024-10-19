@@ -124,7 +124,7 @@ To reproduce the entire demo:
      ```bash
      python scripts/topic_modeling.py
      ```
-   - Verify that the topics are printed in the terminal and the interactive LDA visualization is saved as `models/lda_visualization.html`.
+   - Verify that the topics are printed in the terminal and the interactive LDA visualization is saved as `models/lda_visualization.html`. Then feel free to open lda_visualization.html in a web browser to visualize the LDA topic modeling across the abstracts.
 
 6. **Visualize using Dash**:
    - Run the Dash app for visualization:
