@@ -36,13 +36,21 @@ def fetch_details(id_list):
     return results
 
 # Fetch PubMed data with expanded terms
-def get_pubmed_data(mental_health_terms, epigenetic_terms, max_results=100):
+def get_pubmed_data(mental_health_terms, epigenetic_terms, ethnographic_terms, socioeconomic_terms, max_results=100):
     # Expand the terms using PubMedBERT
     expanded_mental_health_terms = get_similar_terms(mental_health_terms)
     expanded_epigenetic_terms = get_similar_terms(epigenetic_terms)
+    expanded_ethnographic_terms = get_similar_terms(ethnographic_terms)
+    expanded_socioeconomic_terms = get_similar_terms(socioeconomic_terms)
 
-    # Build a dynamic query using both expanded term lists
-    query = f"({' OR '.join(expanded_mental_health_terms)}) AND ({' OR '.join(expanded_epigenetic_terms)}) AND trauma"
+    # Build a dynamic query using all expanded term lists
+    query = (
+        f"({' OR '.join(expanded_mental_health_terms)}) AND "
+        f"({' OR '.join(expanded_epigenetic_terms)}) AND "
+        f"({' OR '.join(expanded_ethnographic_terms)}) AND "
+        f"({' OR '.join(expanded_socioeconomic_terms)}) AND trauma"
+    )
+
     print(f"Generated Query: {query}")
 
     # Search PubMed with the generated query
@@ -60,12 +68,14 @@ def get_pubmed_data(mental_health_terms, epigenetic_terms, max_results=100):
             abstract = article['MedlineCitation']['Article']['Abstract']['AbstractText'][0]
             journal = article['MedlineCitation']['Article']['Journal']['Title']
             article_data.append({'Title': title, 'Abstract': abstract, 'Journal': journal})
+            pass
         except KeyError:
             continue
 
     # Convert the data to a DataFrame
     df = pd.DataFrame(article_data)
     return df
+
 
 def save_to_csv(df, filename):
     df.to_csv(filename, index=False)
@@ -76,6 +86,10 @@ if __name__ == "__main__":
     mental_health_terms = ["depression", "bipolar", "PTSD", "anxiety", "suicide"]
     epigenetic_terms = ["DNA methylation", "histone modification", "gene expression"]
 
+    # New terms for race/ethnicity and socioeconomic disparities
+    ethnographic_terms = ["race", "ethnicity", "African American", "Latino", "Caucasian", "Asian", "Native American", "Hispanic", "Indigenous", "Arab", "Middle Eastern"]
+    socioeconomic_terms = ["socioeconomic status", "income inequality", "poverty", "social class", "education disparity", "economic hardship"]
+
     # Fetch data using the expanded terms
-    df = get_pubmed_data(mental_health_terms, epigenetic_terms)
+    df = get_pubmed_data(mental_health_terms, epigenetic_terms, ethnographic_terms, socioeconomic_terms)
     save_to_csv(df, 'data/pubmed_articles.csv')
