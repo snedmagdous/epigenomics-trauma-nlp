@@ -11,10 +11,10 @@ This project analyzes how mental health disorders impact epigenetic markers, wit
 
 #### Team Members & Responsibilities:
 
-**Member 1: Maya**  
+**Member 1: Maya** (mmm443)
 Responsibilities:  
-- Data Fetching from PubMed
-- Developing the visualizations
+- Data Fetching articles in bulk from PubMed related to epigenetics and mental health
+- Developing the visualizations in main.py to create interactive interfaces for users to visualize the data across multiple dimensions
 - Researching relevant terms for fetching data and preprocessing
 
 **Demo + Steps to Run:**
@@ -48,11 +48,11 @@ Responsibilities:
 
 ---
 
-**Member 2: Majd**  
+**Member 2: Majd** (ma798)
 Responsibilities:  
 - NLP analysis for preprocessing abstracts, including fixing negation handling and keyword weights
-- Visualizing model analysis
-- Fixing dependencies and ensuring reproducibility
+- Visualizing model analysis through LDA topic modeling and fine-tuning model to biomedical terms
+- Fixing numpy, scipy, pandas, and pyLDAvis dependencies and ensuring reproducibility across devices
 
 **Demo:**
 1. **Preprocessing** (`preprocessing.py`):
@@ -96,7 +96,7 @@ To reproduce the entire demo:
 
 1. **Clone the repository**:
    ```bash
-   git clone <your-repo-url>
+   git clone git@github.coecis.cornell.edu:cs4701-24fa-projects/CAP_Epigenomics-Analysis_ma798_mmm443.git
    ```
 
 2. **Install dependencies**:
