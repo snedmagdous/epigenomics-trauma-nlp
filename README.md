@@ -44,7 +44,7 @@ Responsibilities:
    - Open your browser and navigate to `http://127.0.0.1:8050/` to see the interactive visualizations.
    
 **TA Should Expect:**
-- The TA will see how PubMed data is fetched, saved, and preprocessed, and then how this data is visualized in the Dash dashboard.
+- The TA will see how PubMed data is fetched, saved, and preprocessed into a csv file, and then how this data is visualized in the Dash dashboard across mental health and racial disparities.
 
 ---
 
@@ -142,7 +142,3 @@ To reproduce the entire demo:
 - **Changing Parameters**: You can adjust the number of topics in the LDA model by modifying the `num_topics` argument in `topic_modeling.py`.
 
 This demo showcases a full end-to-end analysis, from data collection and preprocessing to topic modeling and interactive visualizations.
-
----
-
-Feel free to let me know if you'd like further revisions or additions to the README!
