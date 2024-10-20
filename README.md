@@ -7,6 +7,52 @@ This project analyzes how mental health disorders impact epigenetic markers, wit
 
 ---
 
+### Reproducibility
+
+To reproduce the entire demo:
+
+1. **Clone the repository**:
+   ```bash
+   git clone git@github.coecis.cornell.edu:cs4701-24fa-projects/CAP_Epigenomics-Analysis_ma798_mmm443.git
+   ```
+
+2. **Install dependencies**:
+   Ensure all required dependencies are installed by running:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Fetch data from PubMed**:
+   - Run the PubMed fetching script:
+     ```bash
+     python scripts/pubmed_fetch.py
+     ```
+   - Verify the `data/pubmed_articles.csv` file is generated.
+
+4. **Preprocess data**:
+   - Run the preprocessing script:
+     ```bash
+     python scripts/preprocessing.py
+     ```
+   - Verify the `data/preprocessed_pubmed_articles.csv` file is generated.
+
+5. **Run topic modeling**:
+   - Run the topic modeling script:
+     ```bash
+     python scripts/topic_modeling.py
+     ```
+   - Verify that the topics are printed in the terminal and the interactive LDA visualization is saved as `models/lda_visualization.html`. Then feel free to open lda_visualization.html in a web browser to visualize the LDA topic modeling across the abstracts.
+
+6. **Visualize using Dash**:
+   - Run the Dash app for visualization:
+     ```bash
+     python scripts/main.py
+     ```
+   - Open your browser and navigate to `http://127.0.0.1:8050/` to view the interactive dashboard.
+
+---
+---
+
 ### Demo Script
 
 #### Team Members & Responsibilities:
@@ -87,51 +133,6 @@ Responsibilities:
 - **Running the Scripts**: Each script in the pipeline can be run independently for demonstration. Make sure the output files (CSV files, model artifacts, visualizations) are successfully generated at each stage before moving to the next demo step.
 - **Simplified Demo Datasets**: For the sake of the demo, we use a smaller dataset to ensure fast execution of scripts and reduce the need for heavy computational resources during training.
 - **Output Verification**: After running each script, check the respective CSV files and visualization outputs to verify that the process is working as expected.
-
----
-
-### Reproducibility
-
-To reproduce the entire demo:
-
-1. **Clone the repository**:
-   ```bash
-   git clone git@github.coecis.cornell.edu:cs4701-24fa-projects/CAP_Epigenomics-Analysis_ma798_mmm443.git
-   ```
-
-2. **Install dependencies**:
-   Ensure all required dependencies are installed by running:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Fetch data from PubMed**:
-   - Run the PubMed fetching script:
-     ```bash
-     python scripts/pubmed_fetch.py
-     ```
-   - Verify the `data/pubmed_articles.csv` file is generated.
-
-4. **Preprocess data**:
-   - Run the preprocessing script:
-     ```bash
-     python scripts/preprocessing.py
-     ```
-   - Verify the `data/preprocessed_pubmed_articles.csv` file is generated.
-
-5. **Run topic modeling**:
-   - Run the topic modeling script:
-     ```bash
-     python scripts/topic_modeling.py
-     ```
-   - Verify that the topics are printed in the terminal and the interactive LDA visualization is saved as `models/lda_visualization.html`. Then feel free to open lda_visualization.html in a web browser to visualize the LDA topic modeling across the abstracts.
-
-6. **Visualize using Dash**:
-   - Run the Dash app for visualization:
-     ```bash
-     python scripts/main.py
-     ```
-   - Open your browser and navigate to `http://127.0.0.1:8050/` to view the interactive dashboard.
 
 ---
 
