@@ -1,0 +1,10 @@
+Topic 0: 0.015*"methylation" + 0.012*"effect" + 0.012*"case" + 0.012*"risk" + 0.009*"cumulative" + 0.009*"deployment" + 0.009*"short" + 0.008*"early" + 0.008*"allele" + 0.006*"site" + 0.006*"ptsd" + 0.006*"control" + 0.006*"httlpr" + 0.006*"post" + 0.006*"position" + 0.006*"interaction" + 0.005*"long" + 0.005*"stress" + 0.005*"use" + 0.005*"sample"
+
+Topic 1: 0.015*"ptsd" + 0.014*"methylation" + 0.011*"stress" + 0.011*"discrimination" + 0.009*"association" + 0.009*"disorder" + 0.008*"epigenetic" + 0.008*"crossref" + 0.008*"associate" + 0.006*"increase" + 0.006*"gene" + 0.005*"receptor" + 0.005*"risk" + 0.005*"study" + 0.005*"trauma" + 0.004*"high" + 0.004*"model" + 0.004*"population" + 0.004*"site" + 0.004*"pubme"
+
+Topic 2: 0.000*"methylation" + 0.000*"effect" + 0.000*"ptsd" + 0.000*"depression" + 0.000*"gene" + 0.000*"stress" + 0.000*"case" + 0.000*"site" + 0.000*"epigenetic" + 0.000*"associate" + 0.000*"risk" + 0.000*"use" + 0.000*"analysis" + 0.000*"brain" + 0.000*"level" + 0.000*"sample" + 0.000*"deployment" + 0.000*"early" + 0.000*"symptom" + 0.000*"among"
+
+Topic 3: 0.013*"methylation" + 0.008*"depression" + 0.006*"ptsd" + 0.006*"gene" + 0.006*"analysis" + 0.005*"use" + 0.005*"epigenetic" + 0.005*"stress" + 0.005*"associate" + 0.005*"symptom" + 0.005*"participant" + 0.005*"child" + 0.004*"disorder" + 0.004*"score" + 0.004*"trauma" + 0.004*"experience" + 0.004*"sample" + 0.004*"value" + 0.004*"level" + 0.004*"effect"
+
+Topic 4: 0.019*"wave" + 0.014*"methylation" + 0.014*"increase" + 0.012*"risk" + 0.012*"amygdala" + 0.010*"reactivity" + 0.010*"change" + 0.009*"family" + 0.009*"symptom" + 0.008*"history" + 0.007*"predict" + 0.007*"depression" + 0.007*"effect" + 0.006*"depressive" + 0.006*"great" + 0.006*"analysis" + 0.005*"include" + 0.005*"associate" + 0.005*"participant" + 0.005*"adolescent"
+

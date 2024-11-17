@@ -24,12 +24,16 @@ def build_topic_model(processed_texts, num_topics=5, passes=100):
     
     return lda_model, dictionary, corpus
 
-# Function to print topics from the LDA model
-def print_topics(lda_model, num_words=20):
-    # logging.info(f"Displaying the top {num_words} words from each topic:")
+# Function to print topics from the LDA model to a text file
+def print_topics_to_file(lda_model, num_words=20, file_name="./data/topics.txt"):
+    logging.info(f"Saving the top {num_words} words from each topic to {file_name}...")
     topics = lda_model.print_topics(num_words=num_words)
-    for topic in topics:
-        print(topic)
+    
+    # Open the file in write mode and write the topics
+    with open(file_name, 'w') as file:
+        for topic in topics:
+            file.write(f"Topic {topic[0]}: {topic[1]}\n\n")
+    logging.info(f"Topics saved to {file_name}.")
 
 # Function to save the model, dictionary, and corpus for later use
 def save_model(lda_model, dictionary, corpus, model_path='models'):
@@ -94,7 +98,7 @@ if __name__ == "__main__":
     lda_model, dictionary, corpus = build_topic_model(all_tokens, num_topics=5, passes=20)
 
     # Print the top 15 words from each topic
-    print_topics(lda_model)
+    print_topics_to_file(lda_model)
 
     # Save the model, dictionary, and corpus
     save_model(lda_model, dictionary, corpus, model_path='models')

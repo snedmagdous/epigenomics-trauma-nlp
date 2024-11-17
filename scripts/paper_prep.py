@@ -51,12 +51,48 @@ def preprocess_text(content):
     for token in doc:
         # Keep important terms and entities as is
         if token.text in epigenetic_terms or token.ent_type_ in ['GENE_OR_GENE_PRODUCT', 'CHEMICAL', 'DISEASE']:
-            foo.write(f'{token.text}\n')
+            # foo.write(f'{token.text}\n')
             lemmatized_tokens.append(token.text)
         else:
             lemmatized_tokens.append(token.lemma_)
+
+    # Save sample results to a text file
+    save_sample_results_to_file(doc, file_path=f'sample_output.txt', num_samples=10)
     
     return lemmatized_tokens
+
+
+# Function to save sample results to a text file
+def save_sample_results_to_file(doc, file_path='sample_output.txt', num_samples=10):
+    # Open the file in write mode
+    with open(file_path, 'w', encoding='utf-8') as f:
+        # Write a header for the file
+        f.write("Sample results from SciSpacy Doc:\n")
+        f.write("=" * 50 + "\n")
+        
+        # Print the first `num_samples` tokens and their lemmas
+        f.write("Tokens and Lemmas:\n")
+        for token in doc[:num_samples]:
+            f.write(f"Token: {token.text}, Lemma: {token.lemma_}\n")
+        
+        f.write("\n" + "=" * 50 + "\n")
+        
+        # Print the named entities (if any) found in the document
+        if doc.ents:
+            f.write("Named Entities Found:\n")
+            for ent in doc.ents:
+                f.write(f"Entity: {ent.text}, Type: {ent.label_}\n")
+        else:
+            f.write("No named entities found.\n")
+        
+        # Optional: If you want to capture other information like POS tags, you can add it here:
+        f.write("\n" + "=" * 50 + "\n")
+        f.write("Part-of-Speech Tags:\n")
+        for token in doc[:num_samples]:
+            f.write(f"Token: {token.text}, POS Tag: {token.pos_}\n")
+        
+        f.write("\n" + "=" * 50 + "\n")
+        f.write("Sample Results Complete.")
 
 # Function to categorize content based on predefined terms
 def categorize_text(text, keywords):
@@ -105,7 +141,7 @@ def preprocess_pdf_content(pdf_data):
     return df
 
 if __name__ == "__main__":
-    foo = open('foo.txt', 'w')
+    # foo = open('foo.txt', 'w')
     # Directory containing PDF files
     pdf_directory = 'data/papers'
     
@@ -121,4 +157,4 @@ if __name__ == "__main__":
         print("Preprocessing complete and saved to 'data/preprocessed_pdf_content.csv'")
     else:
         print("No valid PDF content extracted.")
-    foo.close()
+    # foo.close()
