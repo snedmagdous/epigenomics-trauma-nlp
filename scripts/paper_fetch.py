@@ -201,8 +201,10 @@ def expand_terms_for_query(terms, max_depth=1, topn=50):
     corpus = fetch_wikipedia_corpus(terms, max_depth=max_depth, max_pages=200)
     if not corpus:
         logging.warning(f"The fetched corpus is empty for terms: {terms}.")
-        return terms  # Fall back to the original terms
-    return generate_similar_terms(terms, model, corpus, topn)
+        return {term: [] for term in terms}  # Return an empty dictionary for each term
+
+    # Generate top similar terms for each input term
+    return generate_similar_terms(terms, model, corpus, topn, per_term=True)
 
 
 def generate_query(mental_health_terms, epigenetic_terms, ethnographic_terms, socioeconomic_terms):
@@ -287,8 +289,7 @@ if __name__ == "__main__":
         "HPA axis dysregulation", "adverse childhood"
     ]
     ethnographic_terms = [
-    "African", "Latino/Hispanic", "Caucasian", "Asian", "Indigenous/Native American", "Hispanic", 
-    "Arab/Middle Eastern", "Multiracial", 
+    "African", "Latino/Hispanic", "Caucasian", "Asian", "Native American", "Arab"
     ]
     socioeconomic_terms = [
     "low-income", "middle-income", "high-income", "below poverty", "above poverty"
