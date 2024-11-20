@@ -37,6 +37,8 @@ import re
 import logging
 import subprocess
 import os
+import json
+
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -295,8 +297,26 @@ if __name__ == "__main__":
     "low-income", "middle-income", "high-income", "below poverty", "above poverty"
     ]
 
+    # Generate expanded terms for each category
+    expanded_terms = {
+    "Mental Health Terms": expand_terms_for_query(mental_health_terms),
+    "Epigenetic Terms": expand_terms_for_query(epigenetic_terms),
+    "Ethnographic Terms": expand_terms_for_query(ethnographic_terms),
+    "Socioeconomic Terms": expand_terms_for_query(socioeconomic_terms),
+    }
+
+    # Save expanded terms to a JSON file
+    with open("top_similar_terms.json", "w", encoding="utf-8") as file:
+        json.dump(expanded_terms, file, indent=4)
+    logging.info("Expanded terms saved to 'top_similar_terms.json'.")
+
     # Generate the query
-    query = generate_query(mental_health_terms, epigenetic_terms, ethnographic_terms, socioeconomic_terms)
+    query = generate_query(
+        mental_health_terms, 
+        epigenetic_terms, 
+        ethnographic_terms, 
+        socioeconomic_terms
+    )
 
     # Fetch papers using the generated query
     fetch_papers(query)
