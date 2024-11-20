@@ -1,160 +1,166 @@
-import spacy
-import re
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-import nltk
-import json
-import pandas as pd
 import os
+import re
+import json
+import logging
 import fitz  # PyMuPDF for PDF text extraction
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk import download
+from collections import defaultdict, Counter
+import spacy
 
-# Ensure NLTK dependencies are available
-nltk.download('punkt')
-nltk.download('stopwords')
+# Setup logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Download NLTK dependencies
+download("punkt")
+download("stopwords")
 
 # Load SciSpacy's biomedical model
-nlp = spacy.load('en_core_sci_lg')
+nlp = spacy.load("en_core_sci_lg")
 
-# Stopwords: Combining your stopwords and custom stopwords
-stop_words = set(stopwords.words('english'))
-custom_stopwords = {"study", "https", "http", "gene", "results", "control", "significant", "across", "factor", "health"}
-stop_words.update(custom_stopwords)
+# Stopwords
+stop_words = set(stopwords.words("english"))
 
-# Keywords to categorize the abstracts
-mental_health_terms = ["depression", "bipolar", "PTSD", "anxiety", "suicide"]
-epigenetic_terms = ["methylation", "modification", "aging"]
-ethnographic_terms = ["Black", "Latino", "Caucasian", "Asian", "Native American", "Hispanic", "Middle Eastern"]
-socioeconomic_terms = ["socioeconomic status", "income inequality", "poverty", "social class", "economic hardship"]
+# Paths and directories
+RAW_ARTICLES_DIR = "./data/papers"  # Directory with raw text or PDFs
+TOP_TERMS_FILE = "./data/expanded_terms/top_similar_terms.json"  # Terms from fetch.py
+PROCESSED_DATA_FILE = "./data/processed/preprocessed_articles.json"
 
-# Preprocessing function to clean text, tokenize, remove stopwords, and lemmatize
-def preprocess_text(content):
-    if not isinstance(content, str) or content.strip() == "":
-        return []  # Return empty list if content is missing or invalid
-
-    # Convert to lowercase
-    content = content.lower()
-    
-    # Remove special characters but keep alphanumeric terms
-    content = re.sub(r'[^\w\s]', ' ', content)
-    
-    # Tokenize the text
-    tokens = word_tokenize(content)
-    
-    # Remove stopwords
-    tokens = [token for token in tokens if len(token)>3 and token not in stop_words and not re.search(r'\d', token) and len(token) > 2]
-    
-    # Apply the biomedical model to the tokens
-    doc = nlp(' '.join(tokens))
-    
-    # Lemmatize tokens and handle scientific entities
-    lemmatized_tokens = []
-    for token in doc:
-        # Keep important terms and entities as is
-        if token.text in epigenetic_terms or token.ent_type_ in ['GENE_OR_GENE_PRODUCT', 'CHEMICAL', 'DISEASE']:
-            # foo.write(f'{token.text}\n')
-            lemmatized_tokens.append(token.text)
-        else:
-            lemmatized_tokens.append(token.lemma_)
-
-    # Save sample results to a text file
-    save_sample_results_to_file(doc, file_path=f'sample_output.txt', num_samples=10)
-    
-    return lemmatized_tokens
+# Load expanded terms (core + similar terms)
+with open(TOP_TERMS_FILE, "r", encoding="utf-8") as file:
+    expanded_terms = json.load(file)
 
 
-# Function to save sample results to a text file
-def save_sample_results_to_file(doc, file_path='sample_output.txt', num_samples=10):
-    # Open the file in write mode
-    with open(file_path, 'w', encoding='utf-8') as f:
-        # Write a header for the file
-        f.write("Sample results from SciSpacy Doc:\n")
-        f.write("=" * 50 + "\n")
-        
-        # Print the first `num_samples` tokens and their lemmas
-        f.write("Tokens and Lemmas:\n")
-        for token in doc[:num_samples]:
-            f.write(f"Token: {token.text}, Lemma: {token.lemma_}\n")
-        
-        f.write("\n" + "=" * 50 + "\n")
-        
-        # Print the named entities (if any) found in the document
-        if doc.ents:
-            f.write("Named Entities Found:\n")
-            for ent in doc.ents:
-                f.write(f"Entity: {ent.text}, Type: {ent.label_}\n")
-        else:
-            f.write("No named entities found.\n")
-        
-        # Optional: If you want to capture other information like POS tags, you can add it here:
-        f.write("\n" + "=" * 50 + "\n")
-        f.write("Part-of-Speech Tags:\n")
-        for token in doc[:num_samples]:
-            f.write(f"Token: {token.text}, POS Tag: {token.pos_}\n")
-        
-        f.write("\n" + "=" * 50 + "\n")
-        f.write("Sample Results Complete.")
-
-# Function to categorize content based on predefined terms
-def categorize_text(text, keywords):
-    
-    if not isinstance(text, str):  # Check if the text is valid (not NaN)
-        return 'None'
-    
-    found_keywords = [keyword for keyword in keywords if keyword in text]
-    return ', '.join(found_keywords) if found_keywords else 'None'
-
-# Extract text from PDFs in a directory
 def extract_pdf_content(pdf_directory):
+    """
+    Extract text from PDF files in a directory.
+    Args:
+        pdf_directory (str): Directory containing PDF files.
+    Returns:
+        list: List of dictionaries with file names and extracted content.
+    """
     pdf_data = []
     for file_name in os.listdir(pdf_directory):
-        if file_name.endswith('.pdf'):  # Process only PDF files
+        if file_name.endswith(".pdf"):
             file_path = os.path.join(pdf_directory, file_name)
-            print(f"Processing: {file_name}")
+            logging.info(f"Extracting content from: {file_name}")
             try:
                 doc = fitz.open(file_path)
                 text = ""
                 for page in doc:
                     text += page.get_text()
-                pdf_data.append({"File_Name": file_name, "Content": text.strip()})
+                pdf_data.append({"file_name": file_name, "content": text.strip()})
             except Exception as e:
-                print(f"Error reading {file_name}: {e}")
+                logging.error(f"Error extracting {file_name}: {e}")
     return pdf_data
 
-# Preprocess the content from PDFs
-def preprocess_pdf_content(pdf_data):
-    df = pd.DataFrame(pdf_data)
-    
-    # Apply text preprocessing to the content
-    df['Processed_Content'] = df['Content'].apply(preprocess_text)
-    
-    # Convert tokenized content back to JSON format for storage
-    df['Processed_Content'] = df['Processed_Content'].apply(json.dumps)
-    
-    # Apply categorization based on predefined terms
-    df['Mental_Health_Terms'] = df['Content'].apply(lambda x: categorize_text(x, mental_health_terms))
-    df['Epigenetic_Terms'] = df['Content'].apply(lambda x: categorize_text(x, epigenetic_terms))
-    df['Socioeconomic_Terms'] = df['Content'].apply(lambda x: categorize_text(x, socioeconomic_terms))
-    df['Ethnographic_Terms'] = df['Content'].apply(lambda x: categorize_text(x, ethnographic_terms))
 
-    df = df.drop('Content', axis=1)
-    
-    return df
+def clean_text(text):
+    """
+    Perform basic text cleaning and tokenization.
+    Args:
+        text (str): Raw text to clean.
+    Returns:
+        str: Cleaned text.
+    """
+    text = re.sub(r"[^\w\s]", " ", text.lower())  # Lowercase and remove special characters
+    return text
+
+
+def lemmatize_and_process(text):
+    """
+    Lemmatize text using SciSpacy and preserve biomedical entities.
+    Args:
+        text (str): Cleaned text to process.
+    Returns:
+        list: Lemmatized tokens.
+    """
+    doc = nlp(text)
+    lemmatized_tokens = []
+    for token in doc:
+        if token.text in expanded_terms.get("Epigenetic Terms", []):  # Preserve key terms
+            lemmatized_tokens.append(token.text)
+        elif token.ent_type_ in ["GENE_OR_GENE_PRODUCT", "DISEASE", "CHEMICAL"]:
+            lemmatized_tokens.append(token.text)
+        else:
+            lemmatized_tokens.append(token.lemma_)
+    return lemmatized_tokens
+
+
+def save_sample_results_to_file(tokens, file_path="sample_output.txt", doc=None):
+    """
+    Save sample tokens and named entities to a file for debugging.
+    Args:
+        tokens (list): List of tokens.
+        file_path (str): Path to the output file.
+        doc (spacy.Doc): Processed SciSpacy document (optional).
+    """
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write("Sample Results from Tokenization and Named Entity Recognition:\n")
+        f.write("=" * 50 + "\n")
+        f.write("Tokens:\n")
+        f.write(", ".join(tokens[:50]) + "\n\n")
+        if doc:
+            f.write("Named Entities:\n")
+            for ent in doc.ents:
+                f.write(f"Entity: {ent.text}, Type: {ent.label_}\n")
+
+
+def categorize_and_count_terms(text, expanded_terms):
+    """
+    Categorize text using expanded terms and count term frequencies.
+    Args:
+        text (str): Processed text to analyze.
+        expanded_terms (dict): Dictionary of core terms and their expanded similar terms.
+    Returns:
+        dict: Term counts for each category.
+    """
+    term_counts = {category: Counter() for category in expanded_terms.keys()}
+    text_tokens = text.split()
+    for category, terms in expanded_terms.items():
+        term_counts[category] = Counter(
+            term for term in terms if term.lower() in map(str.lower, text_tokens)
+        )
+    return {category: dict(counts) for category, counts in term_counts.items()}
+
+
+def preprocess_articles(input_dir=RAW_ARTICLES_DIR, expanded_terms=expanded_terms):
+    """
+    Process raw articles (text or PDFs) to clean, categorize, and calculate statistics.
+    Args:
+        input_dir (str): Directory containing raw articles.
+        expanded_terms (dict): Dictionary with core terms and expanded similar terms.
+    Returns:
+        list: List of processed article metadata.
+    """
+    processed_data = []
+
+    # Extract content from PDFs or text files
+    articles = extract_pdf_content(input_dir) if input_dir.endswith(".pdf") else [{"file_name": f, "content": open(os.path.join(input_dir, f), "r").read()} for f in os.listdir(input_dir)]
+
+    for article in articles:
+        raw_text = article["content"]
+        cleaned_text = clean_text(raw_text)
+        tokens = lemmatize_and_process(cleaned_text)
+        term_counts = categorize_and_count_terms(" ".join(tokens), expanded_terms)
+
+        # Save metadata
+        article_metadata = {
+            "paper_name": article["file_name"],
+            "cleaned_text": " ".join(tokens),
+            "term_counts": term_counts,
+        }
+        processed_data.append(article_metadata)
+
+    # Save processed data to JSON
+    with open(PROCESSED_DATA_FILE, "w", encoding="utf-8") as json_file:
+        json.dump(processed_data, json_file, indent=4)
+    logging.info(f"Processed data saved to {PROCESSED_DATA_FILE}")
+
+    return processed_data
+
 
 if __name__ == "__main__":
-    # foo = open('foo.txt', 'w')
-    # Directory containing PDF files
-    pdf_directory = 'data/papers'
-    
-    # Extract content from PDFs
-    pdf_data = extract_pdf_content(pdf_directory)
-    
-    if pdf_data:
-        # Preprocess the extracted PDF content
-        processed_df = preprocess_pdf_content(pdf_data)
-        
-        # Save the processed data to a new CSV file
-        processed_df.to_csv('data/preprocessed_pdf_content.csv', index=False)
-        print("Preprocessing complete and saved to 'data/preprocessed_pdf_content.csv'")
-    else:
-        print("No valid PDF content extracted.")
-    # foo.close()
+    processed_articles = preprocess_articles()
+    logging.info(f"Processed {len(processed_articles)} articles successfully.")
