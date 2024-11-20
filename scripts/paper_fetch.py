@@ -164,11 +164,11 @@ def fetch_papers(query, scholar_pages=1, min_year=2000, output_dir="./data/testi
 
 if __name__ == "__main__":
     # Core terms for querying
-    mental_health_terms = ["depression", "bipolar", "PTSD", "anxiety", "suicide"]
-    epigenetic_terms = ["DNA methylation", "histone modification", "gene expression"]
+    mental_health_terms = ["depression", "bipolar", "PTSD", "anxiety", "suicide", "generational trauma"]
+    epigenetic_terms = ["methylation", "histone modification", "epigenetic", "OXTR"]
     ethnographic_terms = [
-        "race", "ethnicity", "African American", "Latino", "Caucasian",
-        "Asian", "Native American", "Hispanic", "Indigenous", "Arab", "Middle Eastern"
+        "African", "Latino", "Caucasian",
+        "Asian", "Native", "Hispanic", "Indigenous", "Arab", "Middle Eastern"
     ]
     socioeconomic_terms = [
         "socioeconomic status", "income inequality", "poverty", "social class",

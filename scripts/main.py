@@ -10,10 +10,10 @@ def load_preprocessed_data(filepath):
     df = pd.read_csv(filepath)
     
     # Handle NaN values by filling them with 'Unknown'
-    df['Ethnographic_Terms'] = df['Ethnographic_Terms'].fillna('Unknown')
-    df['Socioeconomic_Terms'] = df['Socioeconomic_Terms'].fillna('Unknown')
-    df['Mental_Health_Terms'] = df['Mental_Health_Terms'].fillna('Unknown')
-    df['Epigenetic_Terms'] = df['Epigenetic_Terms'].fillna('Unknown')
+    df['Ethnographic_Terms'] = df['Ethnographic_Terms'].fillna('unk')
+    df['Socioeconomic_Terms'] = df['Socioeconomic_Terms'].fillna('unk')
+    df['Mental_Health_Terms'] = df['Mental_Health_Terms'].fillna('unk')
+    df['Epigenetic_Terms'] = df['Epigenetic_Terms'].fillna('unk')
     
     return df
 
