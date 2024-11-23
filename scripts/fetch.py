@@ -214,7 +214,7 @@ def expand_terms_for_query(terms, max_depth=1, topn=50):
         return {term: [] for term in terms}  # Return an empty dictionary for each term
 
     # Generate top similar terms for each input term
-    return generate_similar_terms(terms, model, corpus, topn, per_term=True)
+    return generate_similar_terms(terms, model, corpus, topn)
 
 
 def generate_query(mental_health_terms, epigenetic_terms, ethnographic_terms, socioeconomic_terms):
@@ -238,9 +238,10 @@ def generate_query(mental_health_terms, epigenetic_terms, ethnographic_terms, so
 
     # Maintain the nested structure for ethnographic terms
     expanded_terms["Ethnographic Terms"] = {
-        category: expand_terms_for_query(terms, topn=10)
+        category: expand_terms_for_query(terms, topn=10, per_term = True)
         for category, terms in ethnographic_terms.items()
     }
+
 
     # Save expanded terms to a file
     with open("expanded_terms.json", "w", encoding="utf-8") as outf:
@@ -340,6 +341,7 @@ if __name__ == "__main__":
         ethnographic_terms, 
         socioeconomic_terms
     )
+
 
     # Fetch papers using the generated query
     fetch_papers(query)

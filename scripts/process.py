@@ -65,13 +65,15 @@ download("stopwords")
 
 # Load SciSpacy's biomedical model
 # nlp = spacy.load("en_core_sci_lg")
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_lg")
 
 # Get the current directory of the script
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Paths relative to the script's directory
-RAW_ARTICLES_DIR = os.path.normpath(r"C:/Users/snedm/Documents/Cornell/2024 Fall/CS 4701/cs4701/demo2/CAP_Epigenomics-Analysis_ma798_mmm443/CAP_Epigenomics-Analysis_ma798_mmm443/data/papers")
+# RAW_ARTICLES_DIR = os.path.normpath(r"C:/Users/snedm/Documents/Cornell/2024 Fall/CS 4701/cs4701/demo2/CAP_Epigenomics-Analysis_ma798_mmm443/CAP_Epigenomics-Analysis_ma798_mmm443/data/papers")
+# # Path for Majd
+RAW_ARTICLES_DIR = os.path.normpath(r"./data/testing_folder")
 TOP_TERMS_FILE = os.path.join(BASE_DIR, "expanded_terms.json")  # Terms from fetch.py
 OUTPUT_FILE = os.path.join(BASE_DIR, "preprocessed_articles.json")  # Adjust relative path
 
@@ -82,7 +84,7 @@ print(f"RAW_ARTICLES_DIR: {RAW_ARTICLES_DIR}")
 print(f"TOP_TERMS_FILE: {TOP_TERMS_FILE}")
 print(f"OUTPUT_FILE: {OUTPUT_FILE}")
 
-# Load expanded terms (core + similar terms)s
+# Load expanded terms (core + similar terms)
 try:
     with open(TOP_TERMS_FILE, "r", encoding="ascii", errors="replace") as file:
         expanded_terms = json.load(file)
@@ -90,7 +92,7 @@ try:
 except FileNotFoundError as e:
     print(f"Error: {e}")
     print(f"Ensure that the file exists at: {TOP_TERMS_FILE}")
-
+f = open('removed.txt', 'w')
 def extract_text_from_pdf(pdf_path):
     """
     Extract text from PDF files.
@@ -119,10 +121,27 @@ def clean_text(text):
     Returns:
         str: Cleaned text.
     """
-    return re.sub(r"[^\w\s]", " ", text.lower())
+    # Remove links starting with 'http'
+    text = re.sub(r"http\S+", "", text)
+    
+    # Remove patterns like '[#]'
+    text = re.sub(r"\[\d+\]", "", text)
+
+    # Remove standalone numbers
+    text = re.sub(r"\b\d+\b", "", text)
+
+    # Remove standalone letters
+    text = re.sub(r"\b\w\b", "", text)
+
+    # Remove standalone punctuation
+    text = re.sub(r"[^a-zA-Z\d\s:]", "", text)  
+    
+    # Remove extra spaces created by the removals
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
 
 
-def lemmatize_and_process(text):
+def lemmatize_and_process(doc):
     """
     Lemmatize text using SciSpacy and preserve biomedical entities.
     Args:
@@ -130,8 +149,23 @@ def lemmatize_and_process(text):
     Returns:
         list: Lemmatized tokens.
     """
-    doc = nlp(text)
-    return [token.lemma_ if token.ent_type_ == "" else token.text for token in doc]
+    tags_to_remove = ['$', "''", ',', '-LRB-', '-RRB-', '.', ':', 'CC', 'CD',
+                       'DT', 'EX', 'FW', 'HYPH', 'IN', 'LS', 'MD',
+                         'NFP', 'PDT', 'POS', 'PRP', 'PRP$', 'RP', 'SYM', 'TO', 'UH',
+                         'WDT', 'WP', 'WP$', 'XX', '_SP', '``'
+                         ]
+
+    ents_to_remove  = ["TIME", "DATE", "GPE", "PERSON", "FAC", "MONEY", "ORG"]
+    cleaned_text = []
+    for token in doc:
+        if token.tag_ in tags_to_remove or token.ent_type_ in ents_to_remove or token.text.lower() in stopwords.words("English"):
+            print(token.text,token.tag_, file = f)
+        elif token.ent_type_ == "" and token.tag_ not in tags_to_remove:
+            cleaned_text.append(token.lemma_)
+        elif token.ent_type_ not in ents_to_remove and token.tag_ not in tags_to_remove:
+            cleaned_text.append(token.text)
+
+    return cleaned_text
 
 
 def categorize_terms(text, expanded_terms):
@@ -208,8 +242,8 @@ def preprocess_articles(input_dir=RAW_ARTICLES_DIR, expanded_terms=expanded_term
             except Exception as e:
                 logging.error(f"Error during NLP processing for {file_name}: {e}")
                 continue
-
-            lemmatized_text = " ".join([token.lemma_ if token.ent_type_ == "" else token.text for token in doc])
+        
+            lemmatized_text = " ".join(lemmatize_and_process(doc))
             term_counts = categorize_terms(lemmatized_text, expanded_terms)
 
             # Update global term counts
@@ -275,3 +309,4 @@ def preprocess_articles(input_dir=RAW_ARTICLES_DIR, expanded_terms=expanded_term
 if __name__ == "__main__":
     processed_articles = preprocess_articles()
     logging.info(f"Processed {len(processed_articles)} articles successfully.")
+    f.close()
