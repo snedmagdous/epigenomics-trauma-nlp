@@ -149,16 +149,20 @@ def lemmatize_and_process(doc):
     Returns:
         list: Lemmatized tokens.
     """
+
+    # Remove prounouns, determiners, articles, wh-words, etc.
     tags_to_remove = ['$', "''", ',', '-LRB-', '-RRB-', '.', ':', 'CC', 'CD',
                        'DT', 'EX', 'FW', 'HYPH', 'IN', 'LS', 'MD',
                          'NFP', 'PDT', 'POS', 'PRP', 'PRP$', 'RP', 'SYM', 'TO', 'UH',
                          'WDT', 'WP', 'WP$', 'XX', '_SP', '``'
                          ]
-
+    
+    # Remove irrelevant entities
     ents_to_remove  = ["TIME", "DATE", "GPE", "PERSON", "FAC", "MONEY", "ORG"]
     cleaned_text = []
     for token in doc:
         if token.tag_ in tags_to_remove or token.ent_type_ in ents_to_remove or token.text.lower() in stopwords.words("English"):
+            # Print out removed tokens for debugging
             print(token.text,token.tag_, file = f)
         elif token.ent_type_ == "" and token.tag_ not in tags_to_remove:
             cleaned_text.append(token.lemma_)
