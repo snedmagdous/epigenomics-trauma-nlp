@@ -107,8 +107,7 @@ def fetch_wikipedia_corpus(input_terms, max_depth=1, max_pages=200):
     logging.info(f"Fetched {len(corpus)} pages from Wikipedia for terms: {input_terms}")
     return list(corpus)
 
-
-def generate_similar_terms(term_list, model, corpus, topn=50, per_term=False):
+def generate_similar_terms(term_list, model, corpus, topn=50, per_term=False, mock_encode=None):
     """
     Generate expanded terms by computing semantic similarity between input terms and a corpus.
     Supports both aggregated similarity and per-term similarity.
@@ -119,6 +118,7 @@ def generate_similar_terms(term_list, model, corpus, topn=50, per_term=False):
         corpus (list of str): List of potential terms to expand into.
         topn (int): Number of top similar terms to return.
         per_term (bool): If True, compute top similar terms for each individual term in the list.
+        mock_encode (callable): Mock function for encoding terms (used for testing).
 
     Returns:
         dict or list: If per_term is True, returns a dictionary of top terms per input term.
@@ -126,23 +126,14 @@ def generate_similar_terms(term_list, model, corpus, topn=50, per_term=False):
     """
     logging.info(f"Generating terms for input list: {term_list}")
 
-    # Encode the corpus terms and validate
-    corpus_embeddings = []
-    valid_corpus = []
-    for term in corpus:
-        try:
-            term_embedding = model.encode(term)
-            corpus_embeddings.append(term_embedding)
-            valid_corpus.append(term)
-        except Exception as e:
-            logging.warning(f"Skipping term '{term}': {e}")
+    # Use mock_encode for testing, otherwise model.encode
+    encode_fn = mock_encode if mock_encode else model.encode
 
-    if not corpus_embeddings:
-        logging.warning("Empty or invalid corpus embeddings. Returning empty results.")
-        return {term: [] for term in term_list} if per_term else []
+    # Encode the corpus terms
+    corpus_embeddings = [encode_fn(term) for term in corpus]
+    valid_corpus = corpus
 
     logging.info(f"Valid corpus size: {len(valid_corpus)}")
-    corpus_embeddings = np.array(corpus_embeddings)  # Ensure embeddings are NumPy arrays
 
     # Handle per-term similarity (individual processing)
     if per_term:
@@ -150,49 +141,45 @@ def generate_similar_terms(term_list, model, corpus, topn=50, per_term=False):
 
         for input_term in term_list:
             try:
-                input_embedding = model.encode(input_term)
-                similarities = util.cos_sim(input_embedding, corpus_embeddings).cpu().numpy()[0]
+                input_embedding = encode_fn(input_term)
+
+                # Mocked embeddings are NumPy arrays; real embeddings are tensors
+                similarities = (
+                    util.cos_sim(input_embedding, corpus_embeddings)
+                    if not mock_encode
+                    else np.dot(input_embedding, np.array(corpus_embeddings).T)
+                )
                 sorted_indices = np.argsort(similarities)[::-1]
                 top_terms = [valid_corpus[i].lower() for i in sorted_indices[:topn]]
 
                 # Ensure core term is included
-                if input_term not in top_terms:
-                    top_terms = [input_term.lower()] + top_terms[:topn-1]  
-                
+                if input_term.lower() not in top_terms:
+                    top_terms = [input_term.lower()] + top_terms[:topn - 1]
+
                 top_similar_terms[input_term] = top_terms
                 logging.info(f"Top terms for '{input_term}': {top_terms}")
 
             except Exception as e:
                 logging.error(f"Error processing term '{input_term}': {e}")
-                top_similar_terms[input_term] = [input_term]  
+                top_similar_terms[input_term] = [input_term]
         return top_similar_terms
 
     # Handle aggregated similarity (all input terms combined)
     else:
-        # Compute combined embedding for the input list
-        term_embeddings = [model.encode(term) for term in term_list]
-        if not term_embeddings:
-            raise ValueError("No embeddings could be computed for the input list.")
-        list_embedding = np.mean(term_embeddings, axis=0)  # Aggregate embeddings
+        term_embeddings = [encode_fn(term) for term in term_list]
+        list_embedding = np.mean(term_embeddings, axis=0)
 
-        # Compute cosine similarities
-        try:
-            similarities = util.cos_sim(list_embedding, corpus_embeddings).cpu().numpy()[0]
-            logging.info(f"First few similarities: {similarities[:10]}")
-        except Exception as e:
-            raise ValueError(f"Error computing similarities: {e}")
-
-        if similarities is None or len(similarities) == 0:
-            raise ValueError("No similarities could be computed.")
-
-        # Sort terms by similarity
+        similarities = (
+            util.cos_sim(list_embedding, corpus_embeddings)
+            if not mock_encode
+            else np.dot(list_embedding, np.array(corpus_embeddings).T)
+        )
         sorted_indices = np.argsort(similarities)[::-1]
         top_similar_terms = [valid_corpus[i].lower() for i in sorted_indices[:topn]]
 
         logging.info(f"Top {topn} similar terms: {top_similar_terms}")
         return top_similar_terms
-
-
+    
 def expand_terms_for_query(terms, max_depth=1, topn=50, per_term = False):
     """
     Expand input terms using Wikipedia and semantic similarity.
@@ -227,23 +214,36 @@ def expand_and_save_to_json(mental_health_terms, epigenetic_terms, ethnographic_
     """
     expanded_terms = {}
 
-    # Expand terms and ensure lowercase
-    expanded_terms["Mental Health Terms"] = [
-        term.lower() for term in expand_terms_for_query(mental_health_terms)
-    ]
-    expanded_terms["Epigenetic Terms"] = [
-        term.lower() for term in expand_terms_for_query(epigenetic_terms)
-    ]
-    expanded_terms["Socioeconomic Terms"] = [
-        term.lower() for term in expand_terms_for_query(socioeconomic_terms)
-    ]
+    # Expand Mental Health and Epigenetic terms with core term as keys
+    expanded_terms["mental health terms"] = {
+        term.lower(): [
+            expanded.lower() for expanded in expand_terms_for_query([term], per_term=True)[term]
+        ]
+        for term in mental_health_terms
+    }
+
+    expanded_terms["epigenetic terms"] = {
+        term.lower(): [
+            expanded.lower() for expanded in expand_terms_for_query([term], per_term=True)[term]
+        ]
+        for term in epigenetic_terms
+    }
+
+    # Expand Socioeconomic Terms with core term as keys
+    expanded_terms["socioeconomic terms"] = {
+        term.lower(): [
+            expanded.lower() for expanded in expand_terms_for_query([term], per_term=True)[term]
+        ]
+        for term in socioeconomic_terms
+    }
 
     # Maintain the nested structure for ethnographic terms and normalize to lowercase
-    expanded_terms["Ethnographic Terms"] = {
+    expanded_terms["ethnographic terms"] = {
         category.lower(): [
-            term.lower() for term in expand_terms_for_query(terms, topn=10, per_term=True)
+            term.lower() for term in expand_terms_for_query(terms, topn=50, per_term=False)
         ]
         for category, terms in ethnographic_terms.items()
+
     }
 
     # Save expanded terms to a file
