@@ -1,15 +1,13 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from expand_terms import (
+from scripts.expand_terms import (
     is_valid_title,
     fetch_wikipedia_corpus,
     generate_similar_terms,
     expand_and_save_to_json
 )
 import json
-import os
 import numpy as np
-
 
 class TestExpandTerms(unittest.TestCase):
     """
@@ -26,7 +24,7 @@ class TestExpandTerms(unittest.TestCase):
         self.assertFalse(is_valid_title("File:Example"))
         self.assertFalse(is_valid_title("Invalid@Title"))
 
-    @patch("expand_terms.wiki_wiki.page")
+    @patch("scripts.expand_terms.wiki_wiki.page")
     def test_fetch_wikipedia_corpus(self, mock_page):
         """
         Test fetching Wikipedia corpus based on input terms.
@@ -41,7 +39,7 @@ class TestExpandTerms(unittest.TestCase):
         self.assertIn("Mock Page", result)
         self.assertLessEqual(len(result), 5)
 
-    @patch("expand_terms.util.cos_sim")
+    @patch("scripts.expand_terms.util.cos_sim")
     def test_generate_similar_terms(self, mock_cos_sim):
         """
         Test generation of similar terms using mocked embeddings.
@@ -53,7 +51,7 @@ class TestExpandTerms(unittest.TestCase):
         mock_cos_sim.side_effect = lambda x, y: np.dot(x, y.T)  # Simulate cosine similarity
 
         # Define the mock input
-        corpus = ["place", "stress", "tree", "ear", "child", "arab"]
+        corpus = ["place", "tea", "stress", "tree", "ear", "child", "arab", "hospital", "see"]
         term_list = ["mental health"]
 
         # Call the function with the mock encoder
@@ -68,43 +66,46 @@ class TestExpandTerms(unittest.TestCase):
         self.assertIn("mental health", result["mental health"]) # Mocked result should include "mental health" (the term itslef)
         self.assertEqual(len(result["mental health"]), 2)  # Top 2 terms
 
-    @patch("expand_terms.fetch_wikipedia_corpus")
-    @patch("expand_terms.generate_similar_terms")
-    def test_expand_and_save_to_json(self, mock_generate_similar_terms, mock_fetch_wikipedia_corpus):
+    @patch("builtins.open", new_callable=unittest.mock.mock_open)
+    @patch("scripts.expand_terms.expand_terms_for_query")
+    def test_expand_and_save_to_json(self, mock_expand_terms_for_query, mock_open):
         """
-        Test the entire term expansion and JSON saving pipeline.
+        Test the entire pipeline of expanding terms and saving to a JSON file.
         """
-        mock_fetch_wikipedia_corpus.return_value = ["psychology", "stress", "anxiety"]
-        mock_generate_similar_terms.side_effect = lambda terms, *args, **kwargs: {
-            term: ["related_term1", "related_term2"] for term in terms
-        }
+        # Mock the output of expand_terms_for_query
+        mock_expand_terms_for_query.side_effect = lambda term, **kwargs: {term[0]: ["related_term1", "related_term2"]}
 
-        mental_health_terms = ["mental health"]
-        epigenetic_terms = ["DNA methylation"]
-        ethnographic_terms = {
-            "African descent": ["Black person"],
-            "Asian descent": ["Asian person"]
-        }
-        socioeconomic_terms = ["low-income", "high-income"]
-
+        # Call the function
         expand_and_save_to_json(
-            mental_health_terms,
-            epigenetic_terms,
-            ethnographic_terms,
-            socioeconomic_terms
+            mental_health_terms=["mental health"],
+            epigenetic_terms=["DNA methylation"],
+            ethnographic_terms={"African descent": ["Black person"]},
+            socioeconomic_terms=["low-income"]
         )
 
-        output_file = "expanded_terms.json"
-        self.assertTrue(os.path.exists(output_file))
+        # Retrieve the written data from the mock file handle
+        handle = mock_open()
+        written_data = "".join(call.args[0] for call in handle.write.call_args_list)
 
-        output_file = "expanded_terms.json"
-        with open(output_file, "r") as f:
-            data = json.load(f)
-            self.assertIn("mental health terms", data)
-            self.assertIn("dna methylation", data["epigenetic terms"])
-            self.assertIn("african descent", data["ethnographic terms"])
+        # Parse the written JSON
+        data = json.loads(written_data)
 
-        os.remove(output_file)
+        # Assertions to validate the structure and content of the JSON
+        self.assertIn("mental health terms", data)
+        self.assertIn("mental health", data["mental health terms"])
+        self.assertEqual(data["mental health terms"]["mental health"], ["related_term1", "related_term2"])
+
+        self.assertIn("epigenetic terms", data)
+        self.assertIn("dna methylation", data["epigenetic terms"])
+        self.assertEqual(data["epigenetic terms"]["dna methylation"], ["related_term1", "related_term2"])
+
+        self.assertIn("socioeconomic terms", data)
+        self.assertIn("low-income", data["socioeconomic terms"])
+        self.assertEqual(data["socioeconomic terms"]["low-income"], ["related_term1", "related_term2"])
+
+        self.assertIn("ethnographic terms", data)
+        self.assertIn("african descent", data["ethnographic terms"])
+        self.assertEqual(data["ethnographic terms"]["african descent"], ["black person"])
 
 
 if __name__ == "__main__":

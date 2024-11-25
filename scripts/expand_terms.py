@@ -1,35 +1,3 @@
-"""
-fetch.py 
-
-Purpose:
-- Fetches and expands terms related to predefined categories (e.g., Mental Health, Epigenetic, etc.) 
-  using semantic similarity.
-- Dynamically generates a list of top similar terms for each core term in the categories, 
-  enabling enhanced text analysis for the next step in preprocessing.py.
-
-Key Steps:
-1. Load core terms for categories like Mental Health, Epigenetic, Ethnographic, and Socioeconomic terms.
-2. Use a SentenceTransformer model to calculate semantic similarity between core terms and a corpus 
-   (e.g., Wikipedia, other text datasets).
-3. Generate a list of top similar terms for each core term.
-4. Save the expanded terms for each category in a structured JSON file.
-
-Inputs:
-- Core term lists for categories (e.g., ["depression", "anxiety", "PTSD"] for Mental Health).
-- Corpus of potential related terms (e.g., scraped Wikipedia links or other text data).
-
-Outputs:
-- JSON file (`top_similar_terms.json`) containing:
-  {
-      "Mental Health Terms": {"depression": ["stress", "psychosis", ...], ...},
-      "Epigenetic Terms": {"methylation": ["CpG islands", "DNA modifications", ...], ...},
-      ...
-  }
-
-How to Use:
-- This script generates a JSON file of expanded terms, which is consumed by `preprocessing.py` for term matching.
-"""
-
 import wikipediaapi
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
@@ -163,20 +131,39 @@ def generate_similar_terms(term_list, model, corpus, topn=50, per_term=False, mo
                 logging.error(f"Error processing term '{input_term}': {e}")
                 top_similar_terms[input_term] = [input_term]
         return top_similar_terms
+    
 
     # Handle aggregated similarity (all input terms combined)
     else:
+        # Compute combined embedding for the input list
         term_embeddings = [encode_fn(term) for term in term_list]
-        list_embedding = np.mean(term_embeddings, axis=0)
+        if not term_embeddings:
+            raise ValueError("No embeddings could be computed for the input list.")
+        list_embedding = np.mean(term_embeddings, axis=0)  # Aggregate embeddings
 
-        similarities = (
-            util.cos_sim(list_embedding, corpus_embeddings)
-            if not mock_encode
-            else np.dot(list_embedding, np.array(corpus_embeddings).T)
-        )
+        # Compute cosine similarities
+        try:
+            similarities = (
+                util.cos_sim(list_embedding, corpus_embeddings).cpu().numpy()[0]
+                if not mock_encode
+                else np.dot(list_embedding, np.array(corpus_embeddings).T)
+            )
+            logging.info(f"First few similarities: {similarities[:10]}")
+        except Exception as e:
+            raise ValueError(f"Error computing similarities: {e}")
+        
+        if similarities is None or len(similarities) == 0:
+            raise ValueError("No similarities could be computed.")
+        
         sorted_indices = np.argsort(similarities)[::-1]
-        top_similar_terms = [valid_corpus[i].lower() for i in sorted_indices[:topn]]
-
+        top_similar_terms = [
+            valid_corpus[i].lower()
+            for i in sorted_indices[:topn]
+            if all(j not in term_list for j in valid_corpus[i].lower().split())  # Corrected
+            and len(valid_corpus[i].split()) <= 3
+            and "and" not in valid_corpus[i].lower()
+            and "or" not in valid_corpus[i].lower()
+        ]
         logging.info(f"Top {topn} similar terms: {top_similar_terms}")
         return top_similar_terms
     
@@ -215,27 +202,18 @@ def expand_and_save_to_json(mental_health_terms, epigenetic_terms, ethnographic_
     expanded_terms = {}
 
     # Expand Mental Health and Epigenetic terms with core term as keys
-    expanded_terms["mental health terms"] = {
-        term.lower(): [
-            expanded.lower() for expanded in expand_terms_for_query([term], per_term=True)[term]
+    expanded_terms["mental health terms"] = [
+            expanded.lower() for expanded in expand_terms_for_query(mental_health_terms, topn=100,per_term=False)
         ]
-        for term in mental_health_terms
-    }
 
-    expanded_terms["epigenetic terms"] = {
-        term.lower(): [
-            expanded.lower() for expanded in expand_terms_for_query([term], per_term=True)[term]
+    expanded_terms["epigenetic terms"] = [
+            expanded.lower() for expanded in expand_terms_for_query(epigenetic_terms, topn=100,per_term=False)
         ]
-        for term in epigenetic_terms
-    }
 
     # Expand Socioeconomic Terms with core term as keys
-    expanded_terms["socioeconomic terms"] = {
-        term.lower(): [
-            expanded.lower() for expanded in expand_terms_for_query([term], per_term=True)[term]
+    expanded_terms["socioeconomic terms"] = [
+            expanded.lower() for expanded in expand_terms_for_query(socioeconomic_terms, topn=100, per_term=False)
         ]
-        for term in socioeconomic_terms
-    }
 
     # Maintain the nested structure for ethnographic terms and normalize to lowercase
     expanded_terms["ethnographic terms"] = {
@@ -243,21 +221,19 @@ def expand_and_save_to_json(mental_health_terms, epigenetic_terms, ethnographic_
             term.lower() for term in expand_terms_for_query(terms, topn=50, per_term=False)
         ]
         for category, terms in ethnographic_terms.items()
-
     }
 
     # Save expanded terms to a file
     with open("expanded_terms.json", "w", encoding="utf-8") as outf:
         json.dump(expanded_terms, outf, indent=4)
-    logging.info("Expanded terms saved to './scripts/expanded_terms.json'.")
-
+    logging.info("Expanded terms saved to './expanded_terms.json'.")
 
 
 if __name__ == "__main__":
     # Core terms for querying
     mental_health_terms = [
         "depression", "bipolar", "PTSD", "anxiety", 
-        "suicide", "generational trauma", "chronic stress"
+        "suicide", "generational trauma", "chronic stress", "mental disorder"
     ]
     epigenetic_terms = [
         "methylation", "demethylation", "CpG islands", "5mC", 
@@ -267,26 +243,26 @@ if __name__ == "__main__":
     ]
     ethnographic_terms = {
         "African descent": [
-            "African person", "African-American person", "Black person", "Black diaspora", "African-American mother"
+            "African ethnicity", "African person", "African-American person", "Black person", "Black diaspora", "African-American mother"
         ],
         "Latino/Hispanic descent": [
-            "Latino person", "Hispanic individual", "Latino community", "Hispanic person"
+            "Latino person", "Hispanic individual", "Latino community", "Hispanic person", "hispanic ethnicity"
         ],
         "Asian descent": [
-            "Asian person", "Asian-American person", "East Asian person", "South Asian person"
+            "Asian person", "Asian-American person", "East Asian person", "South Asian person", "asian ethnicity"
         ],
         "Indigenous descent": [
-            "Indigenous person", "Native American person", "First Nations person", "Indigenous peoples"
+            "Indigenous person", "Native American person", "First Nations person", "Indigenous peoples", "indigenous ethnicity"
         ],
         "Arab descent": [
-            "Arab person", "Middle-Eastern individual", "Muslim person", "Arab-American person"
+            "Arab person", "Middle-Eastern individual", "Muslim person", "Arab-American person", "Arab ethnicity"
         ],
         "European descent": [
-            "European person", "Caucasian person", "White person", "White American", "Anglo-American"
+            "European person", "Caucasian person", "White person", "White American", "Anglo-American", "European ethnicity"
         ]
     }
     socioeconomic_terms = [
-    "low-income", "middle-income", "high-income", "below poverty", "above poverty"
+    "low-income", "middle-income", "high-income", "poverty", "socioeconomic status", "illiteracy"
     ]
 
     # Generate the query
