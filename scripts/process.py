@@ -154,12 +154,14 @@ def lemmatize_and_process(doc):
     # Remove prounouns, determiners, articles, wh-words, etc.
     tags_to_remove = ['$', "''", ',', '-LRB-', '-RRB-', '.', ':', 'CC', 'CD',
                        'DT', 'EX', 'FW', 'HYPH', 'IN', 'LS', 'MD',
-                         'NFP', 'PDT', 'POS', 'PRP', 'PRP$', 'RP', 'SYM', 'TO', 'UH',
+                         'NFP', 'PDT', 'POS', 'PRP', 'PRP$', 'RP', 'RBR', 'RBS', 'RB',
+                           'SYM', 'TO', 'UH', 'JJS', 'JJR'
                          'WDT', 'WP', 'WP$', 'XX', '_SP', '``'
                          ]
     
     # Remove irrelevant entities
-    ents_to_remove  = ["TIME", "DATE", "GPE", "PERSON", "FAC", "MONEY", "ORG"]
+    ents_to_remove  = ["TIME", "DATE", "GPE", "PERSON", "FAC", "MONEY", "ORG", 'ORDINAL', 'PERCENT',
+                       'LAW', 'EVENT', 'QUANTITY', 'PRODUCT', 'CARDINAL', 'WORK_OF_ART', 'LOC']
     cleaned_text = []
     for token in doc:
         if token.tag_ in tags_to_remove or token.ent_type_ in ents_to_remove or token.text.lower() in stopwords.words("English"):
@@ -191,15 +193,16 @@ def categorize_terms(text, expanded_terms):
     return term_counts
 
 def compute_co_occurrence(term_counts):
-    """Compute a co-occurrence matrix for terms across categories."""
     co_occurrence_matrix = defaultdict(lambda: defaultdict(int))
     for category1, terms1 in term_counts.items():
         for category2, terms2 in term_counts.items():
-            if category1 != category2:
+            if category1 != category2 and len(terms1) > 0 and len(terms2) > 0:
+                # Count each pair of terms that appear
                 for term1 in terms1:
                     for term2 in terms2:
-                        co_occurrence_matrix[category1][term2] += terms1[term1]
+                        co_occurrence_matrix[category1][category2] += 1
     return co_occurrence_matrix
+
 
 
 def extract_norp_entities(doc):
