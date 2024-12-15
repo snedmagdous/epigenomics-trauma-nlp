@@ -45,16 +45,13 @@ How to Use:
 - The output JSON file can then be used in `topic_modeling.py` for deeper analysis.
 """
 
-import os
-import re
-import json
-import logging, chardet
-import fitz  # PyMuPDF for PDF text extraction
-from nltk.tokenize import word_tokenize
+import os, re, json, logging, fitz, spacy
 from nltk.corpus import stopwords
 from nltk import download
 from collections import defaultdict, Counter
 import spacy
+import pymupdf as fitz
+
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -65,14 +62,18 @@ download("stopwords")
 
 # Load SciSpacy's biomedical model
 # nlp = spacy.load("en_core_sci_lg")
-nlp = spacy.load("en_core_web_trf")
+logging.info("Loading SpaCy model...")
+try:
+    nlp = spacy.load("en_core_web_trf")
+    logging.info("SpaCy model loaded successfully.")
+except Exception as e:
+    logging.error("Error loading SpaCy model. Ensure the model is installed. Use 'python -m spacy download en_core_web_trf'.", exc_info=True)
+    raise e
 
 
 # Paths relative to the script's directory
-# RAW_ARTICLES_DIR = os.path.normpath(r"C:/Users/snedm/Documents/Cornell/2024 Fall/CS 4701/cs4701/demo2/CAP_Epigenomics-Analysis_ma798_mmm443/CAP_Epigenomics-Analysis_ma798_mmm443/data/papers")
-# # Path for Majd
 RAW_ARTICLES_DIR = "./data/papers"
-OUTPUT_FILE = "./scripts/preprocessed_articles.json"  # Adjust relative path
+OUTPUT_FILE = "./preprocessed_articles.json"  # Adjust relative path
 TOP_TERMS_FILE = './expanded_terms.json'
 
 print(f"RAW_ARTICLES_DIR: {RAW_ARTICLES_DIR}")
@@ -83,11 +84,12 @@ print(f"OUTPUT_FILE: {OUTPUT_FILE}")
 try:
     with open(TOP_TERMS_FILE, "r", encoding="ascii", errors="replace") as file:
         expanded_terms = json.load(file)
-    print("Successfully loaded expanded terms.")
+    logging.info("Successfully loaded expanded terms.")
 except FileNotFoundError as e:
-    print(f"Error: {e}")
-    print(f"Ensure that the file exists at: {TOP_TERMS_FILE}")
-f = open('./data/removed.txt', 'w')
+    logging.error(f"Error: {e}. Ensure that the file exists at: {TOP_TERMS_FILE}", exc_info=True)
+    raise e
+
+
 def extract_text_from_pdf(pdf_path):
     """
     Extract text from PDF files.
@@ -101,7 +103,7 @@ def extract_text_from_pdf(pdf_path):
         text = ""
         for page in doc:
             text += page.get_text()
-        logging.info(f"Extracted text length for {pdf_path}: {len(text)}")
+        logging.info(f"Successfully extracted text of length {len(text)} from {pdf_path}")
         return text.strip()
     except Exception as e:
         logging.error(f"Error extracting text from {pdf_path}: {e}", exc_info=True)
@@ -116,6 +118,7 @@ def clean_text(text):
     Returns:
         str: Cleaned text.
     """
+    logging.debug("Cleaning text...")
     # Remove links starting with 'http'
     text = re.sub(r"http\S+", "", text)
     
@@ -150,7 +153,7 @@ def lemmatize_and_process(doc):
     Returns:
         list: Lemmatized tokens.
     """
-
+    logging.debug("Starting lemmatization and filtering...")
     # Remove prounouns, determiners, articles, wh-words, etc.
     tags_to_remove = ['$', "''", ',', '-LRB-', '-RRB-', '.', ':', 'CC', 'CD',
                        'DT', 'EX', 'FW', 'HYPH', 'IN', 'LS', 'MD',
@@ -169,9 +172,7 @@ def lemmatize_and_process(doc):
             cleaned_text.append(token.lemma_)
         elif token.ent_type_ not in ents_to_remove and token.tag_ not in tags_to_remove:
             cleaned_text.append(token.text)
-        if token.ent_type_ == 'LAW':
-            print('LAWWWWWW', token.text, file=f)
-
+    logging.debug(f"Finished lemmatization. Total tokens: {len(cleaned_text)}")
     return cleaned_text
 
 
@@ -184,14 +185,18 @@ def categorize_terms(text, expanded_terms):
     Returns:
         dict: Term counts for each category.
     """
+    logging.debug("Categorizing terms...")
     term_counts = {category: Counter() for category in expanded_terms.keys()}
     tokens = text.split()
     for category, terms in expanded_terms.items():
         term_counts[category] = Counter(t for t in tokens if t in terms)
+    logging.debug(f"Term counts: {term_counts}")
     return term_counts
+
 
 def compute_co_occurrence(term_counts):
     """Compute a co-occurrence matrix for terms across categories."""
+    logging.debug("Computing co-occurrence matrix...")
     co_occurrence_matrix = defaultdict(lambda: defaultdict(int))
     for category1, terms1 in term_counts.items():
         for category2, terms2 in term_counts.items():
@@ -199,6 +204,7 @@ def compute_co_occurrence(term_counts):
                 for term1 in terms1:
                     for term2 in terms2:
                         co_occurrence_matrix[category1][term2] += terms1[term1]
+    logging.debug(f"Co-occurrence matrix computed.")
     return co_occurrence_matrix
 
 
@@ -225,6 +231,7 @@ def preprocess_articles(input_dir=RAW_ARTICLES_DIR, expanded_terms=expanded_term
     Returns:
         list: List of processed article metadata.
     """
+    logging.info("Starting article preprocessing...")
     processed_articles = []
     global_term_counts = {category: Counter() for category in expanded_terms.keys()}
     global_relationships = defaultdict(lambda: {"terms": Counter(), "co_occurrence_count": 0, "jaccard_similarity": 0.0})
@@ -337,8 +344,7 @@ def preprocess_articles(input_dir=RAW_ARTICLES_DIR, expanded_terms=expanded_term
 
 
 
-
 if __name__ == "__main__":
     processed_articles = preprocess_articles()
     logging.info(f"Processed {len(processed_articles)} articles successfully.")
-    f.close()
+
