@@ -165,6 +165,7 @@ def lemmatize_and_process(doc):
     # Remove irrelevant entities
     ents_to_remove  = ["TIME", "DATE", "GPE", "PERSON", "FAC", "MONEY", "ORG", 'ORDINAL', 'PERCENT',
                        'LAW', 'EVENT', 'QUANTITY', 'PRODUCT', 'CARDINAL', 'WORK_OF_ART', 'LOC']
+                       
     cleaned_text = []
     for token in doc:
         if token.tag_ in tags_to_remove or token.ent_type_ in ents_to_remove or token.text.lower() in stopwords.words("English"):
