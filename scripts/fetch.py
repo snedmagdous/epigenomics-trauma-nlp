@@ -62,7 +62,7 @@ def generate_query(path_to_file, repetitions=1, min_terms=5):
 
     ethnographics = [
         'arab', 'american', 'latino', 'indigenous', 'african', 'asian',
-        'european', 'australian', 'muslim', 'jewish', 'hispanic',
+        'european', 'australian', 'hispanic',
         ]
     # Generate all pairwise combinations within the chunk, limit up to 5 combinations
     ethnographic_combinations = [f"({pair[0]} OR {pair[1]})" for pair in combinations(ethnographics, 2)][:3]  # Limit to 5 pairs    
