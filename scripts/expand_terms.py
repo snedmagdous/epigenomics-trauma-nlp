@@ -17,12 +17,8 @@ Useful for meta-analysis, text mining, and exploring relationships between socia
 """
 
 import wikipediaapi
-from sentence_transformers import SentenceTransformer, util
-import numpy as np
-import re
-import logging
-import json
-
+from sentence_transformers import SentenceTransformer, util  # Ensure this is installed for embeddings
+import wikipediaapi, logging, re, json, numpy as np
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -50,8 +46,10 @@ def is_valid_title(title):
     Returns:
         bool: Whether the title is valid for inclusion in the corpus.
     """
+    # Exclude specific namespaces like "Help:", "Category:", etc.
     if re.match(r"^(Help:|Category:|File:|Portal:|Template:|Wikipedia:)", title):
         return False
+    # Allow only alphanumeric titles and spaces
     if not re.match(r"^[A-Za-z0-9\s\-]+$", title):
         return False
     return True
@@ -78,20 +76,25 @@ def fetch_wikipedia_corpus(input_terms, max_depth=1, max_pages=200):
             return
         for title in page.links.keys():
             if is_valid_title(title) and title not in corpus:
+                # Add title to corpus if valid and not already added
                 corpus.add(title)
                 next_page = wiki_wiki.page(title)
                 if next_page.exists():
+                    # Recursively fetch links from the next page
                     fetch_links(next_page, depth + 1)
 
+    # Iterate through each input term and fetch its associated links
     for term in input_terms:
         page = wiki_wiki.page(term)
         if page.exists():
+            # Add the page title if valid
             if is_valid_title(page.title):
                 corpus.add(page.title)
-            fetch_links(page, depth=1)  # Start at depth 1
+            # Fetch links starting at depth 1
+            fetch_links(page, depth=1) 
 
     logging.info(f"Fetched {len(corpus)} pages from Wikipedia for terms: {input_terms}")
-    return list(corpus)
+    return list(corpus)  # Convert the set to a list
 
 def generate_similar_terms(term_list, model, corpus, topn=50, per_term=False, mock_encode=None):
     """
@@ -121,7 +124,7 @@ def generate_similar_terms(term_list, model, corpus, topn=50, per_term=False, mo
 
     logging.info(f"Valid corpus size: {len(valid_corpus)}")
 
-    # Handle per-term similarity (individual processing)
+    # If per-term similarity is required, process each term individually
     if per_term:
         top_similar_terms = {}
 
@@ -129,16 +132,18 @@ def generate_similar_terms(term_list, model, corpus, topn=50, per_term=False, mo
             try:
                 input_embedding = encode_fn(input_term)
 
+                # # Compute similarity (mock or real)
                 # Mocked embeddings are NumPy arrays; real embeddings are tensors
                 similarities = (
                     util.cos_sim(input_embedding, corpus_embeddings)
                     if not mock_encode
                     else np.dot(input_embedding, np.array(corpus_embeddings).T)
                 )
+                # Sort terms by similarity and retrieve the top N
                 sorted_indices = np.argsort(similarities)[::-1]
                 top_terms = [valid_corpus[i].lower() for i in sorted_indices[:topn]]
 
-                # Ensure core term is included
+                # Include the original term if missing
                 if input_term.lower() not in top_terms:
                     top_terms = [input_term.lower()] + top_terms[:topn - 1]
 
@@ -249,7 +254,7 @@ def expand_and_save_to_json(mental_health_terms, epigenetic_terms, ethnographic_
 
 
 if __name__ == "__main__":
-    # Core terms for querying
+    # Pre-defined Core terms for querying
     mental_health_terms = [
         "depression", "bipolar", "PTSD", "anxiety", 
         "suicide", "generational trauma", "chronic stress", "mental disorder"
@@ -286,3 +291,4 @@ if __name__ == "__main__":
 
     # Generate the query
     expand_and_save_to_json(mental_health_terms, epigenetic_terms, ethnographic_terms, socioeconomic_terms)
+
