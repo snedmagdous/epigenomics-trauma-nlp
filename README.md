@@ -194,6 +194,86 @@ These pre-generated files ensure the visualization script can still run.
    ```  
 
 ---
+Here is an updated section for the **readme** that provides clear instructions on how to run the test suite. This includes running tests for term expansion, modeling, and visualizations.
+
+---
+
+## **Running the Test Suite**
+
+To ensure the functionality and correctness of each major component in the pipeline, we provide a comprehensive test suite located in the `scripts/tests` directory.
+
+### **Steps to Run the Test Suite**  
+
+1. **Navigate to the Project Root Directory**:  
+   Open your terminal or command prompt and ensure you are in the project’s root folder.
+
+   ```bash
+   cd <project-root-directory>
+   ```
+
+2. **Run All Tests**:  
+   Execute all tests using Python's built-in `unittest` module:  
+
+   ```bash
+   python -m unittest discover -s scripts/tests
+   ```
+
+   This command will search for all test files in the `scripts/tests` directory and run them.
+
+---
+
+### **Individual Tests**  
+
+You can also run specific tests for each script if needed:
+
+1. **Test Term Expansion (`test_expand_terms.py`)**:  
+   Verify the logic for dynamically expanding terms and the structure of the output JSON file.
+
+   ```bash
+   python -m unittest scripts/tests/test_expand_terms.py
+   ```
+
+2. **Test Modeling (`test_modeling.py`)**:  
+   Ensure the modeling script correctly categorizes term for co-occurrence calculation and produces the expected output format.
+
+   ```bash
+   python -m unittest scripts/tests/test_modeling.py
+   ```
+
+3. **Test Visualizations (`test_visuals.py`)**:  
+   Confirm that visualizations, such as heatmaps and scatter plots, are generated successfully and without errors.
+
+   ```bash
+   python -m unittest scripts/tests/test_visuals.py
+   ```
+
+---
+
+### **Expected Output**  
+For each test suite, you will see results similar to the following:  
+
+```
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.123s
+
+OK
+```
+
+If a test fails, it will show the specific error and traceback, which you can use to debug the issue.
+
+---
+
+### **Debugging Test Failures**  
+- Ensure all dependencies are installed from `requirements.txt`:  
+   ```bash
+   pip install -r requirements.txt
+   ```
+- Check the paths to your input/output files and directories, as some tests rely on sample data in `data/` and `scripts/`.  
+
+---
+
+By following these steps, you can verify that each pipeline component (term expansion, preprocessing, modeling, and visualizations) works as intended and produces correct outputs.
 
 ## **Closing Notes**  
 
