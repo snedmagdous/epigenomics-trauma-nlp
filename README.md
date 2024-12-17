@@ -1,5 +1,6 @@
 ---
 # **Epigenomic Impact of Social Trauma: A Meta-Analysis Using NLP** 🚀  
+Hi, welcome to our project "Epigenomic Impact of Social Trauma." Our goal is to create a meta-analysis that explores the relationships between social trauma, mental health, and epigenetics, particularly focusing on marginalized groups and the accessibility of research. To do this, we built a pipeline using NLP tools to analyze biomedical research, extract key terms, calculate their co-occurrence, and visualize their relationships.
 
 ---
 
@@ -50,7 +51,7 @@ If any component fails, pre-generated outputs will ensure smooth execution of do
 ## **Demo Script**  
 
 ### **Step 1: Term Expansion (`expand_terms.py`)**  
-**Presenter**: Maya  
+**Presenter**: Majd  
 
 **Goal**: Expand key terms like "PTSD" and "methylation" using semantic similarity techniques.  
 
@@ -68,7 +69,7 @@ If any component fails, pre-generated outputs will ensure smooth execution of do
 ---
 
 ### **Step 2: Fetching Papers (`fetch.py`)**  
-**Presenter**: Majd  
+**Presenter**: Maya 
 
 **Goal**: Fetch academic papers based on the expanded queries.  
 
@@ -90,7 +91,7 @@ If any component fails, pre-generated outputs will ensure smooth execution of do
 ---
 
 ### **Step 3: Preprocessing Articles (`process.py`)**  
-**Presenter**: Maya  
+**Presenter**: Majd 
 
 **Goal**: Clean, tokenize, and categorize extracted text.  
 
@@ -132,7 +133,7 @@ NOTE: Without enough CPU space and/or a GPU to run the parallel semantic analysi
 ---
 
 ### **Step 5: Visualizations (`myvisuals.py`)**  
-**Presenter**: Majd  
+**Presenter**: Majd + Maya
 
 **Goal**: Visualize relationships using interactive heatmaps and scatter plots.  
 
