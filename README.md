@@ -1,174 +1,197 @@
-# CAP_Epigenomics-Analysis_ma798_mmm443
+---
 
-# Demo Script for Epigenomic NLP Project
+# CAP_Epigenomics-Analysis_ma798_mmm443  🚀
 
-## **Team Members and Responsibilities**
+## **Demo Script for Epigenomic NLP Project**  
+
+### **Team Members and Responsibilities**  
 1. **Majd Aldaye (NetID: ma798)**  
-   Contributions:
-   - Implemented testing frameworks for all major scripts (`test_expand_terms.py`, `test_visuals.py`, etc.).
-   - Debugged `fetch.py` and `expand_terms.py` functionality extensively.
-   - Worked on developing visualization logic in `myvisuals.py`.
-   - Assisted in refining preprocessing logic (`process.py`) and improving co-occurrence calculations.
+   - Debugged `fetch.py` functionality extensively and ensured query reliability.  
+   - Developed unit testing frameworks for major scripts (`test_expand_terms.py`, `test_visuals.py`, etc.).  
+   - Created and refined visualizations in `myvisuals.py`.  
+   - Assisted in debugging and optimizing the `process.py` logic.  
 
 2. **Maya Murry (NetID: mmm443)**  
-   Contributions:
-   - Implemented `fetch.py` for querying and downloading research papers.
-   - Developed term expansion using semantic similarity in `expand_terms.py`.
-   - Refactored `process.py` for improved text cleaning, tokenization, and categorization.
-   - Began implementing `topic_modeling.py` using LangChain for deeper semantic analysis.
+   - Implemented `expand_terms.py` for term expansion using semantic similarity.  
+   - Developed and optimized `process.py` for text cleaning, tokenization, and term categorization.  
+   - Designed and tested the `run_modeling.py` script for co-occurrence matrix calculations.  
+   - Integrated `fetch.py` and ensured smooth query-based paper fetching.  
 
 ---
 
-## **Demo Goals**
-The demo will:
-1. Verify  major components of the pipeline run successfully against test cases.
-2. Showcase distinct contributions from each team member.
-3. Provide clear and reproducible steps for the TA to run the demo independently.
+## **Demo Overview**  
+
+The demo will:  
+1. Run the **term expansion** logic to dynamically expand terms.  
+2. Fetch research papers using **queries**.  
+3. Process articles by cleaning, categorizing terms, and creating structured outputs.  
+4. Run the modeling pipeline to calculate term co-occurrences.  
+5. Visualize relationships between terms using interactive heatmaps and scatter plots.  
+
+If any component fails during the demo, pre-generated files will be provided to ensure continuity.  
 
 ---
 
-## **Demo Overview**
+## **Preparation**  
 
-### **Preparation**
-1. **Environment Setup**:
-   - Python version: `3.10+`
-   - Dependencies:
-     ```bash
-     pip install -r requirements.txt
-     ```
-   - Ensure the following directories/files exist:
-     - `data/`: Contains sample papers, mock JSON outputs, and intermediate files.
-     - `scripts/`: Contains all major pipeline scripts and test suites.
-     - `tests/`: Contains unit tests for key components.
-     - `models/`: Contains different models that get produced and used throughout the pipeline.
+1. **Environment Setup**:  
+   - Python version: `3.10+`  
+   - Install all dependencies:  
+     ```bash  
+     pip install -r requirements.txt  
+     ```  
+   - Ensure the following directories/files exist:  
+     - `data/`: Contains pre-downloaded papers, sample outputs, and mock data.  
+     - `scripts/`: Contains all major pipeline scripts and utilities.  
+     - `models/`: (Optional) Contains embeddings or saved models.  
 
-2. **Data Preparation**:
-   - Data for testing is located in `data/papers/`.
-   - A pre-generated expanded terms JSON file (`expanded_terms.json`) and sample preprocessed output (`preprocessed_articles.json`) are included in .
-
-3. **Execution Plan**:
-   - The demo will run on **both laptops** for efficiency, each prioritizing certain code to run.
-   - Code components will be run sequentially.
+2. **Data Preparation**:  
+   - Place input research papers into `data/papers/`.  
+   - Ensure any pre-generated files (e.g., `expanded_terms.json`, `preprocessed_articles.json`) are available for failsafe execution.  
 
 ---
 
-## **Demo Script**
+## **Demo Script**  
+
 ### **Step 1: Term Expansion (`expand_terms.py`)**  
-**Presenter**: Maya 
+**Presenter**: Maya  
 **What to Show**:  
-- Running the term expansion logic to dynamically generate expanded terms based on semantic similarity.
-- Testing the term expansion functionality with a unit test.
+- Running the term expansion script to generate semantically similar terms.  
 
 **Steps**:  
-1. Run the term expansion script:
-   ```bash
-   python ./scripts/expand_terms.py
-   ```
-   - Expected output: `expanded_terms.json` saved in the `scripts/` directory.  
-   - Key terms like `Mental Health`, `Epigenetics`, and `Ethnographic Terms` should have their related terms expanded and displayed in the terminal.
+1. Run the term expansion script:  
+   ```bash  
+   python ./scripts/expand_terms.py  
+   ```  
+   - Expected Output:  
+     - A JSON file `expanded_terms.json` will be saved in the `data/` folder.  
+     - Displayed expanded terms for categories like Mental Health, Epigenetics, and Socioeconomic terms.  
 
-2. Run unit tests:
-**Presenter**: Majd
-   ```bash
-   python -m unittest tests/test_expand_terms.py
-   ```
-   - Expected result: All test cases pass, verifying the logic for term generation, filtering invalid Wikipedia titles, and JSON structure.
+2. If there’s an issue, validate the JSON structure manually:  
+   - Confirm valid expansions of seed terms based on Wikipedia and semantic similarity.  
 
 ---
+
 ### **Step 2: Fetching Papers (`fetch.py`)**  
-**Presenter**: Majd   
+**Presenter**: Majd  
 **What to Show**:  
-- Running the query-building logic and downloading papers using a mock query for efficiency.
+- Running the script to fetch papers using queries.  
 
 **Steps**:  
-1. Generate a query:
-   ```bash
-   python ./scripts/fetch.py
-   ```
-   - Expected output: A sample query displayed in the terminal.
-   - Mock results: Pre-downloaded papers saved in `data/papers/`.
+1. Run the fetch script:  
+   ```bash  
+   python ./scripts/fetch.py  
+   ```  
+   - If stuck, **manually run a query** in the terminal:  
+     ```bash  
+     python ./scripts/fetch.py --query "epigenetics AND mental health" --limit 5  
+     ```  
+   - Example Output:  
+     - Papers saved in the `data/papers/` directory as PDFs or text files.  
 
-2. Validate the fetched papers directory:
-   - Check that PDFs and metadata files are stored correctly in `data/papers/`.
+2. Confirm the downloaded papers:  
+   - Ensure files are successfully saved in `data/papers/`.  
 
 ---
 
 ### **Step 3: Preprocessing Articles (`process.py`)**  
 **Presenter**: Maya  
 **What to Show**:  
-- Running the preprocessing script to clean, tokenize, and categorize text.
-- Verifying outputs with processed JSON files and co-occurrence matrices.
+- Running the preprocessing script to clean text, categorize terms, and prepare the data for modeling.  
 
 **Steps**:  
-1. Run the preprocessing script:
-   ```bash
-   python ./scripts/process.py
-   ```
-   - Expected output: `preprocessed_articles.json` saved in the `data/` directory.
-   - Key features: Cleaned text, term counts, and disparity metadata (e.g., ethnicity, socioeconomic status).
+1. Run the preprocessing script:  
+   ```bash  
+   python ./scripts/process.py  
+   ```  
+   - Expected Output:  
+     - A structured JSON file `preprocessed_articles.json` saved in the `data/` folder.  
+   - Key Features:  
+     - Cleaned text  
+     - Categorized term counts (e.g., mental health terms, epigenetic terms).  
 
-2. Check the co-occurrence matrix in the JSON output:
-   - Verify that relationships between terms are calculated correctly.
-
-3. Run unit tests:
-**Presenter**: Majd 
-   ```bash
-   python -m unittest scripts.tests.test_expand_terms
-   ```
-   - Expected result: Expected test cases pass, understanding the ones that fail, ensuring the integrity of text cleaning, tokenization, and categorization logic.
+2. Validate the JSON output:  
+   - Each article should contain `paper_name`, categorized term counts, and disparity metadata.  
 
 ---
 
-### **Step 4: Topic Modeling (`topic_modeling.py`)**  
-**Presenter**: Maya Murry  
+### **Step 4: Modeling (`run_modeling.py`)**  
+**Presenter**: Maya  
 **What to Show**:  
-- A preliminary LangChain-based topic modeling implementation to identify themes.
+- Generating term co-occurrence matrices and summarizing key relationships.  
 
 **Steps**:  
-1. Run the topic modeling script:
-   ```bash
-   python ./scripts/topic_modeling.py
-   ```
-   - Expected output: A JSON file (`postprocessed_articles.json`) with identified topics for sample articles.
+1. Run the modeling script:  
+   ```bash  
+   python ./scripts/run_modeling.py  
+   ```  
+   - Expected Output:  
+     - `modeling_output.json` saved in the `data/` folder.  
+     - This file will contain categorized term counts and co-occurrence matrices per article.  
 
-2. Display the topics:
-   - Show key themes extracted from the preprocessed data.
+2. Validate the modeling output:  
+   - Confirm co-occurrence counts for terms like `PTSD` with `methylation` or `low-income`.  
 
 ---
 
 ### **Step 5: Visualizations (`myvisuals.py`)**  
-**Presenter**: Majd
+**Presenter**: Majd  
 **What to Show**:  
-- Generating interactive visualizations (e.g., heatmaps, 3D scatter plots) to represent relationships.
+- Interactive visualizations of term relationships.  
 
 **Steps**:  
-1. Launch the app:
-   ```bash
-   python ./scripts/myvisuals.py
-   ```
-   - Expected output: A browser window displaying:
-     - Heatmaps of term frequencies across categories.
-     - 3D scatter plots showing relationships between terms.
+1. Launch the visualization app:  
+   ```bash  
+   python ./scripts/myvisuals.py  
+   ```  
+   - Expected Output:  
+     - A **Dash server** will open at `http://127.0.0.1:8050/`.  
+     - Visualizations include:  
+       - Heatmaps showing relationships between **Epigenetic** terms and **Mental Health**/Socioeconomic/Ethnicity terms.  
+       - A 3D scatter plot for high-level term associations.  
 
-2. Explain the interactive features:
-   - Highlight how users can explore term relationships visually.
-   - Elaborate on next implementation steps of 3D dash interactions, chatbot integration to interpret results, and better results after topic_modeling completiob.
-
----
-
-## **What the TA Should Expect**
-- **Output Files**:
-  - `expanded_terms.json`: Expanded terms generated dynamically.
-  - `preprocessed_articles.json`: Cleaned and categorized article data that will then be used by topic_modeling to further interpret data.
-- **Interactive Visuals**: A running app with multiple visualization types.
-- **Successful Test Cases**: Verified correctness of each pipeline step.
+2. Key Interactions to Showcase:  
+   - Hover over heatmap cells to view specific co-occurrence counts.  
+   - Explore patterns in the data, e.g., high co-occurrences for marginalized groups or low-income terms.  
 
 ---
 
-## **Failsafe**
-- If any component fails, mock data and pre-generated outputs will be used to demonstrate the downstream steps.
-- Mock files:
-  - `./expanded_terms.json`
-  - `./preprocessed_articles.json`
+## **Expected Outputs**  
 
-This script ensures smooth, reproducible execution of the demo while showcasing significant contributions from both team members.
+### Key Files Generated:  
+- `expanded_terms.json`: Semantically expanded terms.  
+- `preprocessed_articles.json`: Cleaned and categorized article data.  
+- `modeling_output.json`: Co-occurrence matrices for categorized terms.  
+
+### Interactive Dash Visualizations:  
+- Accessible at `http://127.0.0.1:8050/`.  
+
+---
+
+## **Failsafe Execution**  
+
+If any script fails, the following mock files are available for use:  
+- `data/expanded_terms.json`  
+- `data/preprocessed_articles.json`  
+- `data/modeling_output.json`  
+
+These ensure smooth execution of downstream steps.  
+
+---
+
+## **Troubleshooting**  
+
+1. **Fetch Script Fails**:  
+   - Run manually with a specific query using `--query` and `--limit` options.  
+
+2. **Term Expansion Issues**:  
+   - Check for internet connectivity (necessary for Wikipedia API).  
+
+3. **Visualizations Not Loading**:  
+   - Ensure all dependencies in `requirements.txt` are installed.  
+   - Re-run the server script:  
+     ```bash  
+     python ./scripts/myvisuals.py  
+     ```  
+
+---
