@@ -1,53 +1,49 @@
 ---
+# **Epigenomic Impact of Social Trauma: A Meta-Analysis Using NLP** 🚀  
 
-# CAP_Epigenomics-Analysis_ma798_mmm443  🚀
+---
 
-## **Demo Script for Epigenomic NLP Project**  
+## **Team Members and Responsibilities**  
 
-### **Team Members and Responsibilities**  
 1. **Majd Aldaye (NetID: ma798)**  
-   - Debugged `fetch.py` functionality extensively and ensured query reliability.  
+   - Debugged `fetch.py` functionality and ensured query reliability.  
    - Developed unit testing frameworks for major scripts (`test_expand_terms.py`, `test_visuals.py`, etc.).  
    - Created and refined visualizations in `myvisuals.py`.  
    - Assisted in debugging and optimizing the `process.py` logic.  
 
 2. **Maya Murry (NetID: mmm443)**  
-   - Implemented `expand_terms.py` for term expansion using semantic similarity.  
-   - Developed and optimized `process.py` for text cleaning, tokenization, and term categorization.  
-   - Designed and tested the `run_modeling.py` script for co-occurrence matrix calculations.  
-   - Integrated `fetch.py` and ensured smooth query-based paper fetching.  
+   - Implemented `expand_terms.py` for dynamic term expansion using semantic similarity.  
+   - Developed and optimized `process.py` for text cleaning, tokenization, and categorization.  
+   - Designed and tested `run_modeling.py` for generating co-occurrence matrices.  
+   - Integrated and ensured smooth execution of `fetch.py` for query-based paper retrieval.  
 
 ---
 
 ## **Demo Overview**  
 
 The demo will:  
-1. Run the **term expansion** logic to dynamically expand terms.  
-2. Fetch research papers using **queries**.  
-3. Process articles by cleaning, categorizing terms, and creating structured outputs.  
-4. Run the modeling pipeline to calculate term co-occurrences.  
-5. Visualize relationships between terms using interactive heatmaps and scatter plots.  
+1. Expand search terms using **semantic similarity** techniques.  
+2. Fetch relevant papers using dynamically generated **queries**.  
+3. Process articles to clean, tokenize, and categorize terms into predefined categories.  
+4. Generate **co-occurrence matrices** for deeper relationship analysis.  
+5. Visualize insights interactively using heatmaps and 3D scatter plots.  
 
-If any component fails during the demo, pre-generated files will be provided to ensure continuity.  
+If any component fails, pre-generated outputs will ensure smooth execution of downstream steps.  
 
 ---
 
 ## **Preparation**  
 
-1. **Environment Setup**:  
-   - Python version: `3.10+`  
-   - Install all dependencies:  
-     ```bash  
-     pip install -r requirements.txt  
-     ```  
-   - Ensure the following directories/files exist:  
-     - `data/`: Contains pre-downloaded papers, sample outputs, and mock data.  
-     - `scripts/`: Contains all major pipeline scripts and utilities.  
-     - `models/`: (Optional) Contains embeddings or saved models.  
-
-2. **Data Preparation**:  
-   - Place input research papers into `data/papers/`.  
-   - Ensure any pre-generated files (e.g., `expanded_terms.json`, `preprocessed_articles.json`) are available for failsafe execution.  
+### **Environment Setup**  
+- Python version: `3.10+`  
+- Install dependencies:  
+   ```bash  
+   pip install -r requirements.txt  
+   ```  
+- Verify the directory structure:  
+   - `data/`: Pre-downloaded papers, sample JSON outputs, and mock data.  
+   - `scripts/`: Contains all scripts (e.g., preprocessing, modeling, visualizations).  
+   - `models/`: (Optional) Saved embeddings/models used during term expansion.  
 
 ---
 
@@ -55,143 +51,153 @@ If any component fails during the demo, pre-generated files will be provided to 
 
 ### **Step 1: Term Expansion (`expand_terms.py`)**  
 **Presenter**: Maya  
-**What to Show**:  
-- Running the term expansion script to generate semantically similar terms.  
+
+**Goal**: Expand key terms like "PTSD" and "methylation" using semantic similarity techniques.  
 
 **Steps**:  
 1. Run the term expansion script:  
    ```bash  
    python ./scripts/expand_terms.py  
    ```  
-   - Expected Output:  
-     - A JSON file `expanded_terms.json` will be saved in the `data/` folder.  
-     - Displayed expanded terms for categories like Mental Health, Epigenetics, and Socioeconomic terms.  
-
-2. If there’s an issue, validate the JSON structure manually:  
-   - Confirm valid expansions of seed terms based on Wikipedia and semantic similarity.  
+2. **Expected Output**:  
+   - A JSON file `expanded_terms.json` saved in `data/`.  
+   - Contains expanded terms for **mental health**, **epigenetics**, **socioeconomic**, and **ethnicity** categories.  
+3. Validate:  
+   - Example terms like "methylation" expanded to "DNA methylation," "CpG sites," etc.
 
 ---
 
 ### **Step 2: Fetching Papers (`fetch.py`)**  
 **Presenter**: Majd  
-**What to Show**:  
-- Running the script to fetch papers using queries.  
+
+**Goal**: Fetch academic papers based on the expanded queries.  
 
 **Steps**:  
 1. Run the fetch script:  
    ```bash  
    python ./scripts/fetch.py  
    ```  
-   - If stuck, **manually run a query** in the terminal:  
-     ```bash  
-     python ./scripts/fetch.py --query "epigenetics AND mental health" --limit 5  
-     ```  
-   - Example Output:  
-     - Papers saved in the `data/papers/` directory as PDFs or text files.  
+2. **If Automated Fetching Fails**: Run a manual query:  
+   ```bash  
+   python ./scripts/fetch.py --query "epigenetics AND trauma" --limit 5  
+   ```  
+3. **Expected Output**:  
+   - PDFs of fetched papers saved in `data/papers/`.  
 
-2. Confirm the downloaded papers:  
-   - Ensure files are successfully saved in `data/papers/`.  
+4. Verify:  
+   - Files appear in the `data/papers/` directory.  
 
 ---
 
 ### **Step 3: Preprocessing Articles (`process.py`)**  
 **Presenter**: Maya  
-**What to Show**:  
-- Running the preprocessing script to clean text, categorize terms, and prepare the data for modeling.  
+
+**Goal**: Clean, tokenize, and categorize extracted text.  
 
 **Steps**:  
 1. Run the preprocessing script:  
    ```bash  
    python ./scripts/process.py  
    ```  
-   - Expected Output:  
-     - A structured JSON file `preprocessed_articles.json` saved in the `data/` folder.  
-   - Key Features:  
-     - Cleaned text  
-     - Categorized term counts (e.g., mental health terms, epigenetic terms).  
+2. **Expected Output**:  
+   - A structured JSON file `preprocessed_articles.json` saved in `data/`.  
+   - Includes:  
+     - **Cleaned text**  
+     - **Categorized term counts** (e.g., Mental Health, Epigenetics, Socioeconomic).  
 
-2. Validate the JSON output:  
-   - Each article should contain `paper_name`, categorized term counts, and disparity metadata.  
+3. Verify JSON Output:  
+   - Example: Terms like "PTSD" categorized under **Mental Health**, and "methylation" under **Epigenetics**.  
 
 ---
 
-### **Step 4: Modeling (`run_modeling.py`)**  
+### **Step 4: Term Relationships and Modeling (`run_modeling.py`)**  
 **Presenter**: Maya  
-**What to Show**:  
-- Generating term co-occurrence matrices and summarizing key relationships.  
+
+**Goal**: Calculate co-occurrence matrices to identify relationships between terms.  
 
 **Steps**:  
 1. Run the modeling script:  
    ```bash  
    python ./scripts/run_modeling.py  
    ```  
-   - Expected Output:  
-     - `modeling_output.json` saved in the `data/` folder.  
-     - This file will contain categorized term counts and co-occurrence matrices per article.  
+2. **Expected Output**:  
+   - `modeling_output.json` saved in `data/`.  
+   - Contains co-occurrence statistics for terms like:  
+     - **PTSD and methylation**  
+     - **low-income and FKBP5**  
 
-2. Validate the modeling output:  
-   - Confirm co-occurrence counts for terms like `PTSD` with `methylation` or `low-income`.  
+3. Validate Output:  
+   - Verify co-occurrence counts for meaningful term pairs.  
 
 ---
 
 ### **Step 5: Visualizations (`myvisuals.py`)**  
 **Presenter**: Majd  
-**What to Show**:  
-- Interactive visualizations of term relationships.  
+
+**Goal**: Visualize relationships using interactive heatmaps and scatter plots.  
 
 **Steps**:  
-1. Launch the visualization app:  
+1. Launch the visualization script:  
    ```bash  
    python ./scripts/myvisuals.py  
    ```  
-   - Expected Output:  
-     - A **Dash server** will open at `http://127.0.0.1:8050/`.  
-     - Visualizations include:  
-       - Heatmaps showing relationships between **Epigenetic** terms and **Mental Health**/Socioeconomic/Ethnicity terms.  
-       - A 3D scatter plot for high-level term associations.  
+2. **Expected Output**:  
+   - A **Dash server** runs at:  
+     ```
+     http://127.0.0.1:8050/
+     ```  
+   - Key Visualizations:  
+     - **Heatmaps**:  
+       - Socioeconomic terms vs. Epigenetic terms  
+       - Ethnicity terms vs. Epigenetic terms  
+       - Mental Health terms vs. Epigenetic terms  
+     - **3D Scatter Plot**:  
+       - Visualize overall relationships among **mental health**, **socioeconomic**, and **epigenetic terms**.  
 
-2. Key Interactions to Showcase:  
-   - Hover over heatmap cells to view specific co-occurrence counts.  
-   - Explore patterns in the data, e.g., high co-occurrences for marginalized groups or low-income terms.  
+3. Demonstrate Interactions:  
+   - Hover to display term relationships and co-occurrence values.  
 
 ---
 
 ## **Expected Outputs**  
 
-### Key Files Generated:  
-- `expanded_terms.json`: Semantically expanded terms.  
-- `preprocessed_articles.json`: Cleaned and categorized article data.  
-- `modeling_output.json`: Co-occurrence matrices for categorized terms.  
-
-### Interactive Dash Visualizations:  
-- Accessible at `http://127.0.0.1:8050/`.  
+| Step                | Output File                      | Key Contents                            |  
+|---------------------|----------------------------------|----------------------------------------|  
+| Term Expansion      | `expanded_terms.json`            | Expanded terms using semantic similarity. |  
+| Preprocessing       | `preprocessed_articles.json`     | Cleaned, categorized term counts.      |  
+| Modeling            | `modeling_output.json`           | Co-occurrence matrices and term stats. |  
+| Visualizations      | Interactive Dash App             | Heatmaps and scatter plots.            |  
 
 ---
 
 ## **Failsafe Execution**  
 
-If any script fails, the following mock files are available for use:  
+If any script fails, the following mock files can be used:  
 - `data/expanded_terms.json`  
 - `data/preprocessed_articles.json`  
 - `data/modeling_output.json`  
 
-These ensure smooth execution of downstream steps.  
+These pre-generated files ensure the visualization script can still run.  
 
 ---
 
 ## **Troubleshooting**  
 
-1. **Fetch Script Fails**:  
-   - Run manually with a specific query using `--query` and `--limit` options.  
-
-2. **Term Expansion Issues**:  
-   - Check for internet connectivity (necessary for Wikipedia API).  
-
-3. **Visualizations Not Loading**:  
-   - Ensure all dependencies in `requirements.txt` are installed.  
-   - Re-run the server script:  
-     ```bash  
-     python ./scripts/myvisuals.py  
-     ```  
+1. **Fetch Script Fails**: Run queries manually with:  
+   ```bash  
+   python ./scripts/fetch.py --query "example query" --limit 5  
+   ```  
+2. **Missing Dependencies**: Ensure all libraries in `requirements.txt` are installed.  
+3. **Visualization Errors**: Restart the Dash server:  
+   ```bash  
+   python ./scripts/myvisuals.py  
+   ```  
 
 ---
+
+## **Closing Notes**  
+
+- **Majd**: Demonstrated preprocessing and visualizations.  
+- **Maya**: Showed term expansion, data fetching, and modeling.  
+
+This pipeline demonstrates the power of NLP in analyzing the intersection of trauma, mental health, and epigenetics, offering meaningful insights for further study.
