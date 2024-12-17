@@ -39,7 +39,7 @@ logging.basicConfig(
 )
 
 # File paths
-processed_file = "./final_modeling.json"  # Output file from modeling.py
+processed_file = "./scripts/json/final_modeling.json"  # Output file from modeling.py
 
 # Load processed topics data
 def load_json(file_path):

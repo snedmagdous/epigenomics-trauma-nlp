@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 from scripts.expand_terms import (
     is_valid_title,
     fetch_wikipedia_corpus,
@@ -30,13 +30,17 @@ class TestExpandTerms(unittest.TestCase):
         """
         Test fetching Wikipedia corpus based on input terms.
         """
+        # Mock a valid Wikipedia page with links
         mock_page.return_value = MagicMock(
             exists=MagicMock(return_value=True),
             links={"Link1": MagicMock(), "Link2": MagicMock()},
             title="Mock Page"
         )
 
+        # Call the function
         result = fetch_wikipedia_corpus(["Mental health"], max_depth=1, max_pages=5)
+
+        # Assertions
         self.assertIn("Mock Page", result)
         self.assertLessEqual(len(result), 5)
 
@@ -55,26 +59,26 @@ class TestExpandTerms(unittest.TestCase):
         corpus = ["place", "tea", "stress", "tree", "ear", "child", "arab", "hospital", "see"]
         term_list = ["mental health"]
 
-        # Call the function with the mock encoder
+        # Call the function
         result = generate_similar_terms(term_list, model=None, corpus=corpus, topn=2, per_term=True, mock_encode=mock_encode)
-
-        # Debugging: Print the result
-        print("Result:", result)
 
         # Assertions
         self.assertIn("mental health", result)
-        self.assertIn("stress", result["mental health"]) # Mocked result should include "stress"
-        self.assertIn("mental health", result["mental health"]) # Mocked result should include "mental health" (the term itslef)
+        self.assertIn("stress", result["mental health"])  # Mocked result should include "stress"
+        self.assertIn("mental health", result["mental health"])  # Includes input term itself
         self.assertEqual(len(result["mental health"]), 2)  # Top 2 terms
 
-    @patch("builtins.open", new_callable=unittest.mock.mock_open)
+    @patch("builtins.open", new_callable=mock_open)
     @patch("scripts.expand_terms.expand_terms_for_query")
-    def test_expand_and_save_to_json(self, mock_expand_terms_for_query, mock_open):
+    def test_expand_and_save_to_json(self, mock_expand_terms_for_query, mock_open_file):
         """
         Test the entire pipeline of expanding terms and saving to a JSON file.
         """
         # Mock the output of expand_terms_for_query
-        mock_expand_terms_for_query.side_effect = lambda term, **kwargs: [term, "related_term1", "related_term2"]
+        mock_expand_terms_for_query.side_effect = lambda terms,  **kwargs: [
+            term.lower() for term in terms
+            ] + ["related_term1", "related_term2"]
+
 
         # Call the function
         expand_and_save_to_json(
@@ -85,7 +89,7 @@ class TestExpandTerms(unittest.TestCase):
         )
 
         # Retrieve the written data from the mock file handle
-        handle = mock_open()
+        handle = mock_open_file()
         written_data = "".join(call.args[0] for call in handle.write.call_args_list)
 
         # Parse the written JSON
@@ -93,22 +97,18 @@ class TestExpandTerms(unittest.TestCase):
 
         # Assertions to validate the structure and content of the JSON
         self.assertIn("mental health terms", data)
-        self.assertIn("mental health", data["mental health terms"])
-        self.assertEqual(data["mental health terms"], ["related_term1", "related_term2"])
+        self.assertEqual(data["mental health terms"], ["mental health", "related_term1", "related_term2"])
 
         self.assertIn("epigenetic terms", data)
-        self.assertIn("dna methylation", data["epigenetic terms"])
-        self.assertEqual(data["epigenetic terms"], ["related_term1", "related_term2"])
+        self.assertEqual(data["epigenetic terms"], ["dna methylation", "related_term1", "related_term2"])
 
         self.assertIn("socioeconomic terms", data)
-        self.assertIn("low-income", data["socioeconomic terms"])
-        self.assertEqual(data["socioeconomic terms"], ["related_term1", "related_term2"])
+        self.assertEqual(data["socioeconomic terms"], ["low-income", "related_term1", "related_term2"])
 
         self.assertIn("ethnographic terms", data)
         self.assertIn("african descent", data["ethnographic terms"])
-        self.assertEqual(data["ethnographic terms"], ["black person"])
+        self.assertEqual(data["ethnographic terms"]["african descent"], ["black person", "related_term1", "related_term2"])
 
 
 if __name__ == "__main__":
-        unittest.main()
-        
+    unittest.main()

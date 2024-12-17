@@ -236,7 +236,7 @@ def expand_and_save_to_json(mental_health_terms, epigenetic_terms, ethnographic_
 
     # Expand Socioeconomic Terms with core term as keys
     expanded_terms["socioeconomic terms"] = [
-            expanded.lower() for expanded in expand_terms_for_query(socioeconomic_terms, topn=200, per_term=False)
+            expanded.lower() for expanded in expand_terms_for_query(socioeconomic_terms, topn=200, per_term=False) 
         ]
 
     # Maintain the nested structure for ethnographic terms and normalize to lowercase
