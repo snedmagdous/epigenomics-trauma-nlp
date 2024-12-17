@@ -121,6 +121,7 @@ def categorize_terms(term_counts, categories):
                     for subcategory, nested_terms in subterms.items():
                         if term in nested_terms:
                             categorized[subcategory][term] += count
+                            term_added = True
                             break
         elif isinstance(categories, list):  # Handle list (e.g., mental_health_terms)
             if term in categories:
