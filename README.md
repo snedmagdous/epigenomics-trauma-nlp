@@ -128,7 +128,7 @@ If any component fails, pre-generated outputs will ensure smooth execution of do
 
 3. Validate Output:  
    - Verify co-occurrence counts for meaningful term pairs.  
-
+NOTE: Without enough CPU space and/or a GPU to run the parallel semantic analysis, this can take extremely long and may crash.
 ---
 
 ### **Step 5: Visualizations (`myvisuals.py`)**  
